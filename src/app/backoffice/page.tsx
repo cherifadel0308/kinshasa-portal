@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
+
 export default function BackofficePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
