@@ -8,25 +8,17 @@ export default function CommunePage() {
   const communeName = decodeURIComponent(name as string);
 
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [places, setPlaces] = useState<{ economy: any[]; social: any[]; cultural: any[] }>({
-    economy: [], social: [], cultural: [],
-  });
+  const [places, setPlaces] = useState<{ economy: any[]; social: any[]; cultural: any[] }>({ economy: [], social: [], cultural: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchAllData() {
       try {
-        const { data: securityData } = await supabase
-          .from('security_alerts')
-          .select('*')
-          .eq('commune', communeName)
-          .order('created_at', { ascending: false });
-        
+        const { data: securityData } = await supabase.from('security_alerts').select('*').eq('commune', communeName).order('created_at', { ascending: false });
         if (securityData) setAlerts(securityData);
 
         const categories = ['economy', 'social', 'cultural'];
         const placesData: any = {};
-
         for (const cat of categories) {
           const res = await fetch(`/api/places?commune=${communeName}&type=${cat}`);
           placesData[cat] = await res.json();
@@ -41,11 +33,11 @@ export default function CommunePage() {
     if (communeName) fetchAllData();
   }, [communeName]);
 
-  if (loading) return <div className="p-8 text-center text-blue-500 font-bold">Loading {communeName}...</div>;
+  if (loading) return <div className="p-8 text-center font-bold text-blue-500">Loading {communeName}...</div>;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <header className="mb-8 rounded-xl bg-blue-600 p-6 text-white shadow-md border-b-4 border-yellow-400">
+    <main className="min-h-screen bg-slate-50 p-6 font-sans">
+      <header className="mb-8 rounded-xl bg-blue-600 p-6 text-white shadow border-b-4 border-yellow-400">
         <h1 className="text-4xl font-black uppercase tracking-wide">{communeName} Hub</h1>
       </header>
 
