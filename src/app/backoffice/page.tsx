@@ -36,7 +36,7 @@ export default function BackofficePage() {
 
   return (
     <main className="min-h-screen bg-slate-100 p-6 flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="max-w-xl w-full bg-white p-6 rounded-xl shadow-md space-y-4 border-t-8 border-drcRed">
+      <form onSubmit={handleSubmit} className="max-w-xl w-full bg-white p-6 rounded-xl shadow-md space-y-4 border-t-8 border-red-600">
         <h1 className="text-xl font-bold text-slate-900">Publish Security Broadcast</h1>
         <p className="text-xs text-gray-500">Logged in as: {user?.email}</p>
         
@@ -70,7 +70,7 @@ export default function BackofficePage() {
           </div>
         </div>
 
-        <button type="submit" className="w-full bg-drcRed text-white p-2.5 rounded-lg text-sm font-bold">Publish Update</button>
+        <button type="submit" className="w-full bg-red-600 text-white p-2.5 rounded-lg text-sm font-bold">Publish Update</button>
         {statusMsg && <p className="text-center text-xs mt-2 text-blue-600 font-bold">{statusMsg}</p>}
       </form>
     </main>
