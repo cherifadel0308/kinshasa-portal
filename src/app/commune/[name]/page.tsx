@@ -1,75 +1,46 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { supabase } from '../../../lib/supabase';
+import Link from 'next/link';
+import { supabase } from '../lib/supabase';
 
-export default function CommunePage() {
-  const { name } = useParams();
-  const communeName = decodeURIComponent(name as string);
+const KINSHASA_COMMUNES = [
+  'Bandalungwa', 'Barumbu', 'Bumbu', 'Gombe', 'Kalamu', 'Kasa-Vubu', 
+  'Kimbanseke', 'Kinshasa', 'Kintambo', 'Lemba', 'Limete', 'Lingwala', 
+  'Makala', 'Maluku', 'Masina', 'Matete', 'Mont-Ngafula', 'Ndjili', 
+  'Ngaba', 'Ngaliema', 'Ngiri-Ngiri', 'Nsele', 'Ouanza', 'Selembao'
+];
 
-  const [alerts, setAlerts] = useState<any[]>([]);
-  const [places, setPlaces] = useState<{ economy: any[]; social: any[]; cultural: any[] }>({ economy: [], social: [], cultural: [] });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchAllData() {
-      try {
-        const { data: securityData } = await supabase.from('security_alerts').select('*').eq('commune', communeName).order('created_at', { ascending: false });
-        if (securityData) setAlerts(securityData);
-
-        const categories = ['economy', 'social', 'cultural'];
-        const placesData: any = {};
-        for (const cat of categories) {
-          const res = await fetch(`/api/places?commune=${communeName}&type=${cat}`);
-          placesData[cat] = await res.json();
-        }
-        setPlaces(placesData);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (communeName) fetchAllData();
-  }, [communeName]);
-
-  if (loading) return <div className="p-8 text-center font-bold text-blue-500">Loading {communeName}...</div>;
-
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-50 p-6 font-sans">
-      <header className="mb-8 rounded-xl bg-blue-600 p-6 text-white shadow border-b-4 border-yellow-400">
-        <h1 className="text-4xl font-black uppercase tracking-wide">{communeName} Hub</h1>
+    <main className="min-h-screen bg-gradient-to-b from-blue-600 to-slate-900 text-white p-8 font-sans">
+      <header className="max-w-6xl mx-auto text-center my-12">
+        <span className="bg-yellow-400 text-slate-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
+          Kinshasa Portal
+        </span>
+        <h1 className="text-5xl font-black mt-4 uppercase tracking-tight">
+          Kinshasa <span className="text-yellow-400">Flag</span> Interactive Map
+        </h1>
+        <p className="text-blue-100 max-w-xl mx-auto mt-4 text-sm">
+          Select any commune to pull up live economic data, social services, and verified security bulletins.
+        </p>
+        <div className="mt-6">
+          <Link href="/login" className="bg-red-600 text-white px-5 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition">
+            Journalist Backoffice Access
+          </Link>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <section className="bg-white p-5 rounded-xl shadow border-t-4 border-red-600">
-          <h2 className="text-xl font-bold text-red-600 mb-4">🛡️ Security Reports</h2>
-          {alerts.length === 0 ? <p className="text-gray-500 text-sm">Clear</p> : (
-            <div className="space-y-3">
-              {alerts.map((a) => (
-                <div key={a.id} className="p-3 rounded border bg-red-50 text-gray-900">
-                  <h3 className="font-bold text-sm">{a.title}</h3>
-                  <p className="text-xs mt-1">{a.description}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {['economy', 'social', 'cultural'].map((cat) => (
-          <section key={cat} className="bg-white p-5 rounded-xl shadow border-t-4 border-slate-300">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 capitalize">{cat === 'economy' ? '💼 Economy' : cat === 'social' ? '👥 Social' : '🎨 Culture'}</h2>
-            <div className="space-y-2">
-              {(places as any)[cat]?.slice(0, 5).map((p: any) => (
-                <div key={p.place_id} className="p-2 border-b text-sm text-gray-900">
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-xs text-gray-500">{p.formatted_address}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      <section className="max-w-6xl mx-auto bg-slate-900 bg-opacity-60 p-8 rounded-2xl border border-blue-500 border-opacity-30 shadow-2xl">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {KINSHASA_COMMUNES.map((commune) => (
+            <Link 
+              key={commune} 
+              href={`/commune/${encodeURIComponent(commune)}`}
+              className="p-4 rounded-xl border border-slate-700 bg-slate-800 bg-opacity-50 text-center font-semibold hover:border-yellow-400 hover:scale-[1.02] transition-all"
+            >
+              <p className="hover:text-yellow-400">{commune}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
