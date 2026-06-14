@@ -10,7 +10,6 @@ const KINSHASA_COMMUNES = [
 ];
 
 export default function HomePage() {
-  const [hoveredCommune, setHoveredCommune] = useState<string | null>(null);
   const [selectedCommune, setSelectedCommune] = useState<string>('Gombe');
 
   return (
@@ -30,36 +29,42 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* LEFT: Map */}
+          {/* LEFT: Interactive Map */}
           <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Vector Geographic Interface</h2>
-            <div className="w-full aspect-[4/3] bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center relative">
-               {/* Simplified SVG Map */}
-              <svg viewBox="0 0 800 600" className="w-full h-full max-h-[450px]">
-                <path d="M 280 180 L 420 180 L 400 240 L 260 240 Z" className={selectedCommune === 'Gombe' ? 'fill-blue-600' : 'fill-slate-800'} onClick={() => setSelectedCommune('Gombe')} />
-                <path d="M 400 240 L 520 220 L 550 360 L 410 340 Z" className={selectedCommune === 'Limete' ? 'fill-blue-600' : 'fill-slate-800'} onClick={() => setSelectedCommune('Limete')} />
-                {/* Add more paths as needed */}
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Interactive Vector Map</h2>
+            <div className="w-full aspect-[4/3] bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center relative p-4">
+              <svg viewBox="0 0 800 600" className="w-full h-full">
+                {/* Visual Map Paths */}
+                <path 
+                  d="M 280 180 L 420 180 L 400 240 L 260 240 Z" 
+                  className={`cursor-pointer transition-colors duration-300 ${selectedCommune === 'Gombe' ? 'fill-blue-600' : 'fill-slate-800 hover:fill-slate-700'}`} 
+                  onClick={() => setSelectedCommune('Gombe')} 
+                />
+                <path 
+                  d="M 400 240 L 520 220 L 550 360 L 410 340 Z" 
+                  className={`cursor-pointer transition-colors duration-300 ${selectedCommune === 'Limete' ? 'fill-blue-600' : 'fill-slate-800 hover:fill-slate-700'}`} 
+                  onClick={() => setSelectedCommune('Limete')} 
+                />
+                {/* Placeholder for remaining communes */}
+                <text x="325" y="215" className="fill-white text-[10px] pointer-events-none uppercase">Gombe</text>
+                <text x="445" y="295" className="fill-white text-[10px] pointer-events-none uppercase">Limete</text>
               </svg>
             </div>
           </div>
 
-          {/* RIGHT: Sidebar with Integrated Video */}
+          {/* RIGHT: Dashboard Sidebar */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl overflow-hidden">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
               <span className="text-[10px] font-mono tracking-widest text-blue-400 uppercase font-black">Zone Focal Point</span>
               <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-1 mb-4">{selectedCommune}</h3>
 
-              {/* DYNAMIC VIDEO FEED */}
-              <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 my-4 group">
+              {/* Dynamic Video Feed */}
+              <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 my-4">
                 <video 
                   src="https://wsadnbdgqanmjhfhjyhx.supabase.co/storage/v1/object/public/commune-videos/Cinematic_smooth_drone_sweep.mp4"
                   autoPlay loop muted playsInline
                   className="w-full h-full object-cover opacity-60"
                 />
-                <div className="absolute bottom-3 left-3">
-                  <span className="text-[9px] font-mono uppercase text-yellow-400 font-bold">Drone Recon Zone</span>
-                  <h4 className="text-sm font-black text-white">{selectedCommune}</h4>
-                </div>
               </div>
 
               <Link 
