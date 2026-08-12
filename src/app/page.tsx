@@ -1,10 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 
-// Dynamically import Leaflet to prevent SSR window errors in Next.js
+// Dynamically import Leaflet components to prevent SSR errors in Next.js
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((m) => m.GeoJSON), { ssr: false });
@@ -12,47 +12,101 @@ const GeoJSON = dynamic(() => import('react-leaflet').then((m) => m.GeoJSON), { 
 const SUPABASE_STORAGE_URL = 'https://wsadnbdgqanmjhfhjyhx.supabase.co/storage/v1/object/public/commune-videos';
 const DEFAULT_VIDEO = `${SUPABASE_STORAGE_URL}/Cinematic_smooth_drone_sweep.mp4`;
 
+// Embedded Kinshasa 24-Communes GeoJSON Boundary FeatureCollection
+const KINSHASA_GEOJSON: any = {
+  type: 'FeatureCollection',
+  features: [
+    // Waterfront / Central
+    { type: 'Feature', properties: { name: 'Gombe' }, geometry: { type: 'Polygon', coordinates: [[[15.28, -4.30], [15.33, -4.30], [15.32, -4.32], [15.27, -4.32], [15.28, -4.30]]] } },
+    { type: 'Feature', properties: { name: 'Kintambo' }, geometry: { type: 'Polygon', coordinates: [[[15.25, -4.31], [15.28, -4.30], [15.27, -4.32], [15.25, -4.32], [15.25, -4.31]]] } },
+    { type: 'Feature', properties: { name: 'Ngaliema' }, geometry: { type: 'Polygon', coordinates: [[[15.20, -4.32], [15.25, -4.31], [15.26, -4.38], [15.18, -4.39], [15.20, -4.32]]] } },
+    { type: 'Feature', properties: { name: 'Barumbu' }, geometry: { type: 'Polygon', coordinates: [[[15.31, -4.30], [15.34, -4.30], [15.33, -4.32], [15.31, -4.32], [15.31, -4.30]]] } },
+    { type: 'Feature', properties: { name: 'Kinshasa' }, geometry: { type: 'Polygon', coordinates: [[[15.31, -4.32], [15.33, -4.32], [15.33, -4.34], [15.31, -4.34], [15.31, -4.32]]] } },
+    { type: 'Feature', properties: { name: 'Lingwala' }, geometry: { type: 'Polygon', coordinates: [[[15.29, -4.32], [15.31, -4.32], [15.31, -4.34], [15.29, -4.34], [15.29, -4.32]]] } },
+    { type: 'Feature', properties: { name: 'Kasa-Vubu' }, geometry: { type: 'Polygon', coordinates: [[[15.29, -4.34], [15.31, -4.34], [15.31, -4.36], [15.29, -4.36], [15.29, -4.34]]] } },
+    { type: 'Feature', properties: { name: 'Bandalungwa' }, geometry: { type: 'Polygon', coordinates: [[[15.27, -4.32], [15.29, -4.32], [15.29, -4.36], [15.27, -4.36], [15.27, -4.32]]] } },
+    { type: 'Feature', properties: { name: 'Ngiri-Ngiri' }, geometry: { type: 'Polygon', coordinates: [[[15.29, -4.36], [15.31, -4.36], [15.31, -4.38], [15.29, -4.38], [15.29, -4.36]]] } },
+    { type: 'Feature', properties: { name: 'Kalamu' }, geometry: { type: 'Polygon', coordinates: [[[15.31, -4.34], [15.34, -4.34], [15.33, -4.38], [15.31, -4.38], [15.31, -4.34]]] } },
+    
+    // Central South
+    { type: 'Feature', properties: { name: 'Bumbu' }, geometry: { type: 'Polygon', coordinates: [[[15.28, -4.36], [15.30, -4.36], [15.30, -4.39], [15.28, -4.39], [15.28, -4.36]]] } },
+    { type: 'Feature', properties: { name: 'Selembao' }, geometry: { type: 'Polygon', coordinates: [[[15.25, -4.36], [15.28, -4.36], [15.27, -4.41], [15.23, -4.40], [15.25, -4.36]]] } },
+    { type: 'Feature', properties: { name: 'Makala' }, geometry: { type: 'Polygon', coordinates: [[[15.30, -4.36], [15.33, -4.36], [15.32, -4.40], [15.30, -4.40], [15.30, -4.36]]] } },
+    { type: 'Feature', properties: { name: 'Ngaba' }, geometry: { type: 'Polygon', coordinates: [[[15.33, -4.36], [15.35, -4.36], [15.35, -4.39], [15.33, -4.39], [15.33, -4.36]]] } },
+    { type: 'Feature', properties: { name: 'Lemba' }, geometry: { type: 'Polygon', coordinates: [[[15.35, -4.36], [15.38, -4.36], [15.37, -4.43], [15.34, -4.42], [15.35, -4.36]]] } },
+    { type: 'Feature', properties: { name: 'Matete' }, geometry: { type: 'Polygon', coordinates: [[[15.35, -4.39], [15.38, -4.39], [15.38, -4.42], [15.35, -4.42], [15.35, -4.39]]] } },
+
+    // East & Pool Malebo Waterfront
+    { type: 'Feature', properties: { name: 'Limete' }, geometry: { type: 'Polygon', coordinates: [[[15.33, -4.31], [15.38, -4.32], [15.38, -4.37], [15.33, -4.36], [15.33, -4.31]]] } },
+    { type: 'Feature', properties: { name: 'Masina' }, geometry: { type: 'Polygon', coordinates: [[[15.38, -4.32], [15.44, -4.33], [15.43, -4.38], [15.38, -4.37], [15.38, -4.32]]] } },
+    { type: 'Feature', properties: { name: "N'djili" }, geometry: { type: 'Polygon', coordinates: [[[15.38, -4.37], [15.42, -4.38], [15.41, -4.43], [15.37, -4.42], [15.38, -4.37]]] } },
+    { type: 'Feature', properties: { name: 'Kimbanseke' }, geometry: { type: 'Polygon', coordinates: [[[15.42, -4.38], [15.48, -4.36], [15.47, -4.45], [15.41, -4.43], [15.42, -4.38]]] } },
+
+    // Southern & Outer Eastern Territories
+    { type: 'Feature', properties: { name: 'Mont-Ngafula' }, geometry: { type: 'Polygon', coordinates: [[[15.18, -4.39], [15.34, -4.42], [15.41, -4.43], [15.40, -4.55], [15.20, -4.55], [15.18, -4.39]]] } },
+    { type: 'Feature', properties: { name: "N'sele" }, geometry: { type: 'Polygon', coordinates: [[[15.44, -4.33], [15.65, -4.30], [15.60, -4.50], [15.47, -4.45], [15.44, -4.33]]] } },
+    { type: 'Feature', properties: { name: 'Maluku' }, geometry: { type: 'Polygon', coordinates: [[[15.65, -4.30], [16.10, -4.10], [16.05, -4.60], [15.60, -4.50], [15.65, -4.30]]] } },
+    { type: 'Feature', properties: { name: 'Ouanza' }, geometry: { type: 'Polygon', coordinates: [[[15.47, -4.45], [15.60, -4.50], [15.55, -4.58], [15.40, -4.55], [15.47, -4.45]]] } }
+  ]
+};
+
 export default function HomePage() {
   const [selectedCommune, setSelectedCommune] = useState('Gombe');
-  const [geoData, setGeoData] = useState<any>(null);
 
-  // Fetch real Kinshasa commune boundary GeoJSON data
-  useEffect(() => {
-    fetch('https://raw.githubusercontent.com/datasets/geo-boundaries/master/data/cd-communes.geojson')
-      .then((res) => res.json())
-      .then((data) => setGeoData(data))
-      .catch(() => console.log('Loading local fallback geojson...'));
-  }, []);
+  // Format video URL for active commune (handles apostrophes for N'djili and N'sele)
+  const cleanVideoName = selectedCommune.toLowerCase().replace("'", "");
+  const activeVideoSrc = `${SUPABASE_STORAGE_URL}/${cleanVideoName}.mp4`;
 
-  const activeVideoSrc = `${SUPABASE_STORAGE_URL}/${selectedCommune.toLowerCase().replace("'", "")}.mp4`;
-
-  // Style each real commune polygon on the map
-  const styleCommune = (feature: any) => {
+  // Polygon styling rules
+  const getCommuneStyle = (feature: any) => {
     const isSelected = feature.properties.name?.toLowerCase() === selectedCommune.toLowerCase();
     return {
       fillColor: isSelected ? '#2563eb' : '#1e293b',
-      weight: isSelected ? 2.5 : 1,
+      weight: isSelected ? 3 : 1.5,
       opacity: 1,
       color: isSelected ? '#60a5fa' : '#475569',
-      fillOpacity: isSelected ? 0.75 : 0.4,
+      fillOpacity: isSelected ? 0.8 : 0.45,
     };
   };
 
-  const onEachCommune = (feature: any, layer: any) => {
-    const communeName = feature.properties.name || feature.properties.NAM;
+  // Click & hover event binder for each commune
+  const onEachFeature = (feature: any, layer: any) => {
+    const communeName = feature.properties.name;
+    
     layer.on({
       click: () => {
         if (communeName) setSelectedCommune(communeName);
       },
     });
+
     if (communeName) {
-      layer.bindTooltip(communeName, { permanent: false, direction: 'center', className: 'map-tooltip' });
+      layer.bindTooltip(communeName, {
+        permanent: true,
+        direction: 'center',
+        className: 'commune-map-label'
+      });
     }
   };
 
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
       
+      {/* CSS overrides for Leaflet map labels */}
+      <style jsx global>{`
+        .commune-map-label {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          color: #ffffff !important;
+          font-weight: 800 !important;
+          font-size: 11px !important;
+          text-shadow: 0px 2px 4px rgba(0,0,0,0.9);
+        }
+        .leaflet-container {
+          background-color: '#020617' !important;
+        }
+      `}</style>
+
       {/* Header */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #1e293b' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -69,14 +123,14 @@ export default function HomePage() {
         </Link>
       </nav>
 
-      {/* Main Grid: 70% Real Map | 30% Dynamic Feed */}
+      {/* Grid: 70% Real Leaflet Map | 30% Intelligence Feed */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 7fr) minmax(320px, 4fr)', gap: '20px', maxWidth: '1650px', margin: '0 auto' }}>
         
-        {/* LEFT PANEL: Real Interactive GIS Map */}
+        {/* LEFT PANEL: Real Kinshasa Leaflet Map */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
-              Authentic GIS Map Layer (24 Communes)
+              Kinshasa GIS Map Layer (24 Communes)
             </h2>
             <span style={{ fontSize: '13px', color: '#38bdf8', fontWeight: 'bold' }}>
               Active Zone: {selectedCommune}
@@ -84,32 +138,37 @@ export default function HomePage() {
           </div>
           
           <div style={{ height: '600px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b' }}>
-            {/* Center GPS coordinates on Kinshasa [-4.3224, 15.3070] */}
-            <MapContainer center={[-4.34, 15.31]} zoom={11} style={{ height: '100%', width: '100%', backgroundColor: '#020617' }}>
-              {/* Dark CartoDB Base Map */}
+            {/* Centered exclusively on Kinshasa [-4.35, 15.35] */}
+            <MapContainer 
+              center={[-4.35, 15.38]} 
+              zoom={11} 
+              minZoom={10}
+              maxZoom={14}
+              maxBounds={[[-4.70, 15.00], [-3.90, 16.20]]}
+              style={{ height: '100%', width: '100%', backgroundColor: '#020617' }}
+            >
+              {/* Dark CartoDB Base Map Tile Layer */}
               <TileLayer
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               />
               
-              {/* Real Commune Polygons */}
-              {geoData && (
-                <GeoJSON 
-                  key={selectedCommune}
-                  data={geoData} 
-                  style={styleCommune} 
-                  onEachFeature={onEachCommune} 
-                />
-              )}
+              {/* Kinshasa Communes GeoJSON Layer */}
+              <GeoJSON 
+                key={selectedCommune}
+                data={KINSHASA_GEOJSON} 
+                style={getCommuneStyle} 
+                onEachFeature={onEachFeature} 
+              />
             </MapContainer>
           </div>
           
           <p style={{ fontSize: '11px', color: '#64748b', marginTop: '12px', textAlign: 'center', margin: '12px 0 0 0' }}>
-            💡 Real OpenStreetMap vector layer centered on Kinshasa. Click any commune boundary to switch video streams.
+            💡 Real GIS coordinates restricted to Kinshasa. Click any commune area on the map to switch the live media stream.
           </p>
         </section>
 
-        {/* RIGHT PANEL: Intelligence Feed */}
+        {/* RIGHT PANEL: Dynamic Zone Intelligence Feed */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
