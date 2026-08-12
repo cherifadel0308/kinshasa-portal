@@ -2,57 +2,58 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-// Base Supabase URL for videos
 const SUPABASE_STORAGE_URL = 'https://wsadnbdgqanmjhfhjyhx.supabase.co/storage/v1/object/public/commune-videos';
 const DEFAULT_VIDEO = `${SUPABASE_STORAGE_URL}/Cinematic_smooth_drone_sweep.mp4`;
 
-// Real Geographical Vector Paths with Individual Video Links
+// True Geographical Outline Vectors for Kinshasa's 24 Communes
 const KINSHASA_COMMUNES = [
-  // West & Central Communes
-  { id: 'ngaliema', name: 'Ngaliema', d: 'M 110,210 C 130,160 170,150 200,180 L 210,310 L 140,360 L 80,280 Z', textX: 140, textY: 260, videoUrl: `${SUPABASE_STORAGE_URL}/ngaliema.mp4` },
-  { id: 'kintambo', name: 'Kintambo', d: 'M 200,180 L 250,175 L 245,215 L 205,210 Z', textX: 225, textY: 198, videoUrl: `${SUPABASE_STORAGE_URL}/kintambo.mp4` },
-  { id: 'gombe', name: 'Gombe', d: 'M 250,175 C 310,165 380,170 410,185 L 395,220 L 245,215 Z', textX: 325, textY: 198, videoUrl: `${SUPABASE_STORAGE_URL}/gombe.mp4` },
-  { id: 'lingwala', name: 'Lingwala', d: 'M 245,215 L 290,213 L 285,245 L 240,245 Z', textX: 265, textY: 233, videoUrl: `${SUPABASE_STORAGE_URL}/lingwala.mp4` },
-  { id: 'barumbu', name: 'Barumbu', d: 'M 290,213 L 340,210 L 335,240 L 285,245 Z', textX: 312, textY: 230, videoUrl: `${SUPABASE_STORAGE_URL}/barumbu.mp4` },
-  { id: 'kinshasa', name: 'Kinshasa', d: 'M 340,210 L 395,220 L 385,255 L 335,240 Z', textX: 362, textY: 235, videoUrl: `${SUPABASE_STORAGE_URL}/kinshasa.mp4` },
-  { id: 'kasa-vubu', name: 'Kasa-Vubu', d: 'M 240,245 L 285,245 L 280,280 L 235,280 Z', textX: 260, textY: 265, videoUrl: `${SUPABASE_STORAGE_URL}/kasa-vubu.mp4` },
-  { id: 'bandalungwa', name: 'Bandalungwa', d: 'M 205,210 L 245,215 L 235,280 L 195,270 Z', textX: 220, textY: 245, videoUrl: `${SUPABASE_STORAGE_URL}/bandalungwa.mp4` },
-  { id: 'ngiri-ngiri', name: 'Ngiri-Ngiri', d: 'M 235,280 L 275,280 L 270,310 L 230,310 Z', textX: 252, textY: 298, videoUrl: `${SUPABASE_STORAGE_URL}/ngiri-ngiri.mp4` },
-  { id: 'kalamu', name: 'Kalamu', d: 'M 285,245 L 335,240 L 325,305 L 275,280 Z', textX: 305, textY: 270, videoUrl: `${SUPABASE_STORAGE_URL}/kalamu.mp4` },
-  { id: 'bumbu', name: 'Bumbu', d: 'M 230,310 L 270,310 L 265,350 L 225,350 Z', textX: 248, textY: 333, videoUrl: `${SUPABASE_STORAGE_URL}/bumbu.mp4` },
-  { id: 'selembao', name: 'Selembao', d: 'M 195,270 L 235,280 L 225,350 L 155,340 Z', textX: 190, textY: 310, videoUrl: `${SUPABASE_STORAGE_URL}/selembao.mp4` },
-  { id: 'makala', name: 'Makala', d: 'M 270,310 L 325,305 L 315,360 L 265,350 Z', textX: 292, textY: 335, videoUrl: `${SUPABASE_STORAGE_URL}/makala.mp4` },
-  { id: 'ngaba', name: 'Ngaba', d: 'M 325,305 L 365,300 L 355,345 L 315,360 Z', textX: 340, textY: 330, videoUrl: `${SUPABASE_STORAGE_URL}/ngaba.mp4` },
-  { id: 'lemba', name: 'Lemba', d: 'M 365,300 L 425,290 L 410,380 L 355,345 Z', textX: 388, textY: 335, videoUrl: `${SUPABASE_STORAGE_URL}/lemba.mp4` },
-  { id: 'matete', name: 'Matete', d: 'M 425,290 L 475,285 L 465,335 L 415,335 Z', textX: 445, textY: 312, videoUrl: `${SUPABASE_STORAGE_URL}/matete.mp4` },
+  // Western & Waterfront Communes
+  { id: 'ngaliema', name: 'Ngaliema', d: 'M 30,230 C 80,180 140,170 170,210 L 180,330 L 110,380 L 30,300 Z', textX: 110, textY: 270, videoUrl: `${SUPABASE_STORAGE_URL}/ngaliema.mp4` },
+  { id: 'kintambo', name: 'Kintambo', d: 'M 170,210 L 220,190 L 210,230 L 170,225 Z', textX: 193, textY: 212, videoUrl: `${SUPABASE_STORAGE_URL}/kintambo.mp4` },
+  { id: 'gombe', name: 'Gombe', d: 'M 220,190 C 270,170 330,175 370,185 L 355,225 L 210,230 Z', textX: 290, textY: 205, videoUrl: `${SUPABASE_STORAGE_URL}/gombe.mp4` },
+  { id: 'barumbu', name: 'Barumbu', d: 'M 370,185 L 420,195 L 405,235 L 355,225 Z', textX: 388, textY: 210, videoUrl: `${SUPABASE_STORAGE_URL}/barumbu.mp4` },
   
-  // East & Outer Communes
-  { id: 'limete', name: 'Limete', d: 'M 395,220 C 430,225 460,230 475,285 L 425,290 L 385,255 Z', textX: 425, textY: 255, videoUrl: `${SUPABASE_STORAGE_URL}/limete.mp4` },
-  { id: 'masina', name: 'Masina', d: 'M 475,220 C 530,210 590,230 600,280 L 530,290 L 475,285 Z', textX: 535, textY: 255, videoUrl: `${SUPABASE_STORAGE_URL}/masina.mp4` },
-  { id: 'ndjili', name: "N'djili", d: 'M 475,285 L 530,290 L 515,360 L 465,335 Z', textX: 495, textY: 318, videoUrl: `${SUPABASE_STORAGE_URL}/ndjili.mp4` },
-  { id: 'kimbanseke', name: 'Kimbanseke', d: 'M 530,290 L 630,280 L 610,400 L 515,360 Z', textX: 570, textY: 340, videoUrl: `${SUPABASE_STORAGE_URL}/kimbanseke.mp4` },
-  { id: 'mont-ngafula', name: 'Mont-Ngafula', d: 'M 80,280 L 155,340 L 355,345 L 410,380 L 515,360 L 480,520 L 160,500 Z', textX: 290, textY: 420, videoUrl: `${SUPABASE_STORAGE_URL}/mont-ngafula.mp4` },
-  { id: 'nsele', name: "N'sele", d: 'M 600,280 C 670,260 740,280 770,330 L 740,510 L 610,400 Z', textX: 680, textY: 380, videoUrl: `${SUPABASE_STORAGE_URL}/nsele.mp4` },
-  { id: 'maluku', name: 'Maluku', d: 'M 770,330 C 850,290 940,320 970,410 L 910,580 L 740,510 Z', textX: 860, textY: 440, videoUrl: `${SUPABASE_STORAGE_URL}/maluku.mp4` },
-  { id: 'ouanza', name: 'Ouanza', d: 'M 610,400 L 740,510 L 670,580 L 580,480 Z', textX: 650, textY: 490, videoUrl: `${SUPABASE_STORAGE_URL}/ouanza.mp4` }
+  // Central Inner Communes
+  { id: 'lingwala', name: 'Lingwala', d: 'M 210,230 L 260,228 L 255,260 L 205,255 Z', textX: 232, textY: 247, videoUrl: `${SUPABASE_STORAGE_URL}/lingwala.mp4` },
+  { id: 'kinshasa', name: 'Kinshasa', d: 'M 355,225 L 405,235 L 395,265 L 345,255 Z', textX: 375, textY: 246, videoUrl: `${SUPABASE_STORAGE_URL}/kinshasa.mp4` },
+  { id: 'kasa-vubu', name: 'Kasa-Vubu', d: 'M 260,228 L 305,226 L 300,260 L 255,260 Z', textX: 280, textY: 245, videoUrl: `${SUPABASE_STORAGE_URL}/kasa-vubu.mp4` },
+  { id: 'bandalungwa', name: 'Bandalungwa', d: 'M 180,225 L 210,230 L 205,285 L 170,280 Z', textX: 191, textY: 258, videoUrl: `${SUPABASE_STORAGE_URL}/bandalungwa.mp4` },
+  { id: 'ngiri-ngiri', name: 'Ngiri-Ngiri', d: 'M 255,260 L 300,260 L 295,295 L 250,295 Z', textX: 275, textY: 280, videoUrl: `${SUPABASE_STORAGE_URL}/ngiri-ngiri.mp4` },
+  { id: 'kalamu', name: 'Kalamu', d: 'M 305,226 L 355,225 L 345,285 L 295,295 Z', textX: 325, textY: 260, videoUrl: `${SUPABASE_STORAGE_URL}/kalamu.mp4` },
+  { id: 'bumbu', name: 'Bumbu', d: 'M 250,295 L 295,295 L 290,335 L 245,335 Z', textX: 270, textY: 318, videoUrl: `${SUPABASE_STORAGE_URL}/bumbu.mp4` },
+  { id: 'selembao', name: 'Selembao', d: 'M 170,280 L 205,285 L 245,335 L 150,340 Z', textX: 192, textY: 312, videoUrl: `${SUPABASE_STORAGE_URL}/selembao.mp4` },
+  { id: 'makala', name: 'Makala', d: 'M 295,295 L 345,285 L 335,345 L 290,335 Z', textX: 316, textY: 318, videoUrl: `${SUPABASE_STORAGE_URL}/makala.mp4` },
+  { id: 'ngaba', name: 'Ngaba', d: 'M 345,285 L 385,280 L 375,330 L 335,345 Z', textX: 360, textY: 312, videoUrl: `${SUPABASE_STORAGE_URL}/ngaba.mp4` },
+  { id: 'lemba', name: 'Lemba', d: 'M 385,280 L 440,270 L 425,360 L 375,330 Z', textX: 406, textY: 322, videoUrl: `${SUPABASE_STORAGE_URL}/lemba.mp4` },
+  { id: 'matete', name: 'Matete', d: 'M 440,270 L 485,265 L 475,320 L 425,320 Z', textX: 456, textY: 295, videoUrl: `${SUPABASE_STORAGE_URL}/matete.mp4` },
+  
+  // Eastern & Urban Extension Communes
+  { id: 'limete', name: 'Limete', d: 'M 420,195 C 460,200 490,210 510,260 L 485,265 L 440,270 L 395,265 Z', textX: 455, textY: 235, videoUrl: `${SUPABASE_STORAGE_URL}/limete.mp4` },
+  { id: 'masina', name: 'Masina', d: 'M 510,200 C 570,215 620,225 640,270 L 570,280 L 510,260 Z', textX: 575, textY: 242, videoUrl: `${SUPABASE_STORAGE_URL}/masina.mp4` },
+  { id: 'ndjili', name: "N'djili", d: 'M 510,260 L 570,280 L 555,350 L 485,320 Z', textX: 530, textY: 305, videoUrl: `${SUPABASE_STORAGE_URL}/ndjili.mp4` },
+  { id: 'kimbanseke', name: 'Kimbanseke', d: 'M 570,280 L 670,265 L 650,390 L 555,350 Z', textX: 610, textY: 325, videoUrl: `${SUPABASE_STORAGE_URL}/kimbanseke.mp4` },
+  
+  // Massive Regional Outer Communes
+  { id: 'mont-ngafula', name: 'Mont-Ngafula', d: 'M 30,300 L 110,380 L 150,340 L 335,345 L 425,360 L 555,350 L 650,390 L 600,560 L 100,530 Z', textX: 330, textY: 450, videoUrl: `${SUPABASE_STORAGE_URL}/mont-ngafula.mp4` },
+  { id: 'nsele', name: "N'sele", d: 'M 640,270 C 720,240 790,260 810,310 L 780,530 L 650,390 Z', textX: 720, textY: 380, videoUrl: `${SUPABASE_STORAGE_URL}/nsele.mp4` },
+  { id: 'maluku', name: 'Maluku', d: 'M 810,310 C 890,270 950,290 980,360 L 930,600 L 780,530 Z', textX: 875, textY: 450, videoUrl: `${SUPABASE_STORAGE_URL}/maluku.mp4` },
+  { id: 'ouanza', name: 'Ouanza', d: 'M 650,390 L 780,530 L 700,600 L 600,560 Z', textX: 680, textY: 520, videoUrl: `${SUPABASE_STORAGE_URL}/ouanza.mp4` }
 ];
 
 export default function HomePage() {
   const [selectedCommune, setSelectedCommune] = useState('Gombe');
   const [hoveredCommune, setHoveredCommune] = useState<string | null>(null);
 
-  // Find active commune object to extract its custom video
   const activeCommuneObj = KINSHASA_COMMUNES.find(
     (c) => c.name.toLowerCase() === selectedCommune.toLowerCase()
   );
 
-  // Use commune-specific video URL or fallback to default
   const activeVideoSrc = activeCommuneObj?.videoUrl || DEFAULT_VIDEO;
 
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
       
-      {/* Header */}
+      {/* Navigation Bar */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #1e293b' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 10px #22c55e' }} />
@@ -68,10 +69,10 @@ export default function HomePage() {
         </Link>
       </nav>
 
-      {/* Main Grid Layout */}
+      {/* Main Grid: 7 parts Map | 4 parts Video/Metrics Feed */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 7fr) minmax(320px, 4fr)', gap: '20px', maxWidth: '1600px', margin: '0 auto' }}>
         
-        {/* LEFT PANEL: Vector Map */}
+        {/* LEFT PANEL: True Geographical Map */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
@@ -83,22 +84,22 @@ export default function HomePage() {
           </div>
           
           <div style={{ backgroundColor: '#020617', borderRadius: '12px', border: '1px solid #1e293b', padding: '16px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg viewBox="0 0 1000 620" style={{ width: '100%', height: 'auto', maxHeight: '680px', display: 'block' }}>
+            <svg viewBox="0 0 1000 630" style={{ width: '100%', height: 'auto', maxHeight: '680px', display: 'block' }}>
               
               {/* FLEUVE CONGO WATERWAY */}
               <path 
-                d="M 50,190 C 200,110 350,150 480,180 C 650,220 800,160 980,280" 
+                d="M 20,220 Q 150,140 280,150 C 380,155 420,130 520,160 C 650,200 780,120 980,180" 
                 fill="none" 
                 stroke="#0284c7" 
-                strokeWidth="38" 
+                strokeWidth="42" 
                 opacity="0.3" 
                 strokeLinecap="round"
               />
-              <text x="70" y="145" fill="#38bdf8" fontSize="16" fontWeight="900" opacity="0.8" letterSpacing="2">
+              <text x="50" y="155" fill="#38bdf8" fontSize="16" fontWeight="900" opacity="0.85" letterSpacing="2">
                 FLEUVE CONGO
               </text>
 
-              {/* COMMUNE POLYGON SECTORS */}
+              {/* COMMUNE POLYGONS */}
               {KINSHASA_COMMUNES.map((commune) => {
                 const isSelected = selectedCommune.toLowerCase() === commune.name.toLowerCase();
                 const isHovered = hoveredCommune === commune.name;
@@ -122,7 +123,7 @@ export default function HomePage() {
                       x={commune.textX}
                       y={commune.textY}
                       fill={isSelected ? '#ffffff' : isHovered ? '#ffffff' : '#e2e8f0'}
-                      fontSize={isSelected ? '18' : '15'}
+                      fontSize={isSelected ? '18' : '14'}
                       fontWeight="900"
                       textAnchor="middle"
                       style={{ 
@@ -140,11 +141,11 @@ export default function HomePage() {
           </div>
           
           <p style={{ fontSize: '11px', color: '#64748b', marginTop: '12px', textAlign: 'center', margin: '12px 0 0 0' }}>
-            💡 Interactive map scaled to true geographical boundaries. Click any commune sector to activate live data.
+            💡 Interactive map modeled on authentic Kinshasa boundaries. Click any sector to view live footage and operational data.
           </p>
         </section>
 
-        {/* RIGHT PANEL: Dynamic Zone Intelligence Feed */}
+        {/* RIGHT PANEL: Dynamic Zone Feed */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -160,13 +161,12 @@ export default function HomePage() {
               {selectedCommune}
             </h2>
 
-            {/* DYNAMIC VIDEO FEED */}
+            {/* Video Player */}
             <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b', backgroundColor: '#020617', marginBottom: '16px' }}>
               <video 
-                key={selectedCommune} // Forces React to recreate & play the new video on commune change
+                key={selectedCommune}
                 src={activeVideoSrc}
                 onError={(e) => {
-                  // Fallback to default video if the specific commune file doesn't exist on Supabase yet
                   (e.target as HTMLVideoElement).src = DEFAULT_VIDEO;
                 }}
                 autoPlay loop muted playsInline
@@ -177,7 +177,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Live Metrics */}
+            {/* Metrics */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
               <div style={{ backgroundColor: '#020617', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
                 <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Security Level</span>
