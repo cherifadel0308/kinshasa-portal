@@ -21,11 +21,11 @@ const KINSHASA_COMMUNES = [
   { id: 'masina', name: 'Masina', x: 520, y: 110, w: 110, h: 60 },
   { id: 'matete', name: 'Matete', x: 420, y: 330, w: 90, h: 60 },
   { id: 'mont-ngafula', name: 'Mont-Ngafula', x: 20, y: 330, w: 390, h: 100 },
-  { id: 'ndjili', name: 'N'djili', x: 520, y: 180, w: 110, h: 60 },
+  { id: 'ndjili', name: "N'djili", x: 520, y: 180, w: 110, h: 60 },
   { id: 'ngaba', name: 'Ngaba', x: 320, y: 330, w: 90, h: 60 },
   { id: 'ngaliema', name: 'Ngaliema', x: 20, y: 180, w: 90, h: 130 },
   { id: 'ngiri-ngiri', name: 'Ngiri-Ngiri', x: 220, y: 320, w: 90, h: 60 },
-  { id: 'nsele', name: 'N'sele', x: 640, y: 330, w: 140, h: 100 },
+  { id: 'nsele', name: "N'sele", x: 640, y: 330, w: 140, h: 100 },
   { id: 'ouanza', name: 'Ouanza', x: 520, y: 330, w: 90, h: 60 },
   { id: 'selembao', name: 'Selembao', x: 120, y: 320, w: 90, h: 70 },
 ];
