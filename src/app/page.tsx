@@ -8,7 +8,7 @@ const KINSHASA_COMMUNES = [
   { id: 'ngaliema', name: 'Ngaliema', d: 'M 110,210 C 130,160 170,150 200,180 L 210,310 L 140,360 L 80,280 Z', textX: 140, textY: 260 },
   { id: 'kintambo', name: 'Kintambo', d: 'M 200,180 L 250,175 L 245,215 L 205,210 Z', textX: 225, textY: 198 },
   { id: 'gombe', name: 'Gombe', d: 'M 250,175 C 310,165 380,170 410,185 L 395,220 L 245,215 Z', textX: 325, textY: 198 },
-  { id: 'lingwala', name: 'Lingwala', x: 245, y: 215, d: 'M 245,215 L 290,213 L 285,245 L 240,245 Z', textX: 265, textY: 233 },
+  { id: 'lingwala', name: 'Lingwala', d: 'M 245,215 L 290,213 L 285,245 L 240,245 Z', textX: 265, textY: 233 },
   { id: 'barumbu', name: 'Barumbu', d: 'M 290,213 L 340,210 L 335,240 L 285,245 Z', textX: 312, textY: 230 },
   { id: 'kinshasa', name: 'Kinshasa', d: 'M 340,210 L 395,220 L 385,255 L 335,240 Z', textX: 362, textY: 235 },
   { id: 'kasa-vubu', name: 'Kasa-Vubu', d: 'M 240,245 L 285,245 L 280,280 L 235,280 Z', textX: 260, textY: 265 },
@@ -37,9 +37,6 @@ export default function HomePage() {
   const [selectedCommune, setSelectedCommune] = useState('Gombe');
   const [hoveredCommune, setHoveredCommune] = useState<string | null>(null);
 
-  // Dynamic Video Link Selection
-  const activeCommune = KINSHASA_COMMUNES.find(c => c.name.toLowerCase() === selectedCommune.toLowerCase());
-
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
       
@@ -59,10 +56,10 @@ export default function HomePage() {
         </Link>
       </nav>
 
-      {/* Main Grid Ratio: 7 Parts Map (65%) | 4 Parts Video/Intelligence Panel (35%) */}
+      {/* Main Grid Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 7fr) minmax(320px, 4fr)', gap: '20px', maxWidth: '1600px', margin: '0 auto' }}>
         
-        {/* LEFT PANEL: Enlarged Geographical Vector Map */}
+        {/* LEFT PANEL: Vector Map with Enlarged Text */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
@@ -85,7 +82,7 @@ export default function HomePage() {
                 opacity="0.3" 
                 strokeLinecap="round"
               />
-              <text x="70" y="145" fill="#38bdf8" fontSize="14" fontWeight="900" opacity="0.7" letterSpacing="2">
+              <text x="70" y="145" fill="#38bdf8" fontSize="16" fontWeight="900" opacity="0.8" letterSpacing="2">
                 FLEUVE CONGO
               </text>
 
@@ -109,14 +106,19 @@ export default function HomePage() {
                       strokeWidth={isSelected ? '3' : '1.5'}
                       style={{ transition: 'all 0.2s ease' }}
                     />
+                    {/* ENLARGED & BOLD COMMUNE TEXT LABELS */}
                     <text
                       x={commune.textX}
                       y={commune.textY}
-                      fill={isSelected ? '#ffffff' : isHovered ? '#f8fafc' : '#94a3b8'}
-                      fontSize={isSelected ? '12' : '10'}
-                      fontWeight="bold"
+                      fill={isSelected ? '#ffffff' : isHovered ? '#ffffff' : '#e2e8f0'}
+                      fontSize={isSelected ? '18' : '15'}
+                      fontWeight="900"
                       textAnchor="middle"
-                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                      style={{ 
+                        pointerEvents: 'none', 
+                        userSelect: 'none',
+                        textShadow: '0px 2px 4px rgba(0, 0, 0, 0.9)'
+                      }}
                     >
                       {commune.name}
                     </text>
@@ -131,7 +133,7 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* RIGHT PANEL: Compact Zone Intelligence Feed */}
+        {/* RIGHT PANEL: Dynamic Zone Intelligence Feed */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
