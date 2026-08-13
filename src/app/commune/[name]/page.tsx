@@ -62,7 +62,6 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
     const fetchDispatches = async () => {
       setLoading(true);
       try {
-        // Query Supabase table for custom journalist posts matching this commune
         const { data, error } = await supabase
           .from('dispatches')
           .select('*')
@@ -72,7 +71,6 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
         if (data && data.length > 0) {
           setDispatches(data);
         } else {
-          // Use structured fallbacks if table is empty
           setDispatches(defaultDispatches);
         }
       } catch (err) {
@@ -85,7 +83,6 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
     fetchDispatches();
   }, [communeName]);
 
-  // Filter dispatches by category
   const securityReports = dispatches.filter((d) => d.category === 'security');
   const economyReports = dispatches.filter((d) => d.category === 'economy');
   const socialReports = dispatches.filter((d) => d.category === 'social');
@@ -106,7 +103,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
       <nav 
         style={{
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: '16px',
           borderBottom: '1px solid #1e293b',
@@ -290,7 +287,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
       <footer 
         style={{ 
           display: 'flex', 
-          justify: 'space-between', 
+          justifyContent: 'space-between', 
           alignItems: 'center', 
           paddingTop: '20px', 
           marginTop: '40px',
