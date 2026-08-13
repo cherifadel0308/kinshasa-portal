@@ -44,7 +44,7 @@ export default function LoginPage() {
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         display: 'flex',
         flexDirection: 'column',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         boxSizing: 'border-box'
       }}
     >
@@ -52,7 +52,7 @@ export default function LoginPage() {
       <nav 
         style={{
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: '12px',
           borderBottom: '1px solid #1e293b',
@@ -231,7 +231,7 @@ export default function LoginPage() {
       <footer 
         style={{ 
           display: 'flex', 
-          justify: 'space-between', 
+          justifyContent: 'space-between', 
           alignItems: 'center', 
           paddingTop: '12px', 
           borderTop: '1px solid #1e293b', 
