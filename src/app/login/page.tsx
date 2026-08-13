@@ -28,111 +28,124 @@ export default function LoginPage() {
         router.push('/backoffice');
       }
     } catch (err: any) {
-      setErrorMsg('An unexpected error occurred. Please check your connection.');
+      setErrorMsg('An unexpected authentication error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 flex flex-col justify-between p-4 md:p-8 font-sans relative overflow-hidden">
-      {/* Futuristic Background Light Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Navigation Header Bar */}
-      <nav className="relative z-10 flex items-center justify-between w-full max-w-6xl mx-auto pb-4 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]" />
-          <h1 className="text-sm md:text-base font-black tracking-widest uppercase text-slate-100">
+    <main className="min-h-screen bg-[#020617] text-slate-100 flex flex-col justify-between p-4 md:p-6 font-sans select-none">
+      
+      {/* Top Header Bar matching Homepage */}
+      <nav className="w-full max-w-[1650px] mx-auto flex items-center justify-between pb-3 border-b border-[#1e293b]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-3 h-3 rounded-full bg-[#22c55e] shadow-[0_0_10px_#22c55e]" />
+          <h1 className="text-sm md:text-base font-black tracking-wider uppercase text-white">
             Kinshasa Urban Intelligence Portal
           </h1>
         </div>
         <Link
           href="/"
-          className="px-4 py-2 text-xs font-bold bg-slate-900 text-slate-400 hover:text-slate-100 border border-slate-800 hover:border-slate-700 rounded-lg transition-all"
+          className="px-4 py-2 bg-[#dc2626] hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-all shadow-md"
         >
-          ← Return to Portal Map
+          Return to Portal Map
         </Link>
       </nav>
 
-      {/* Central Login Command Card */}
-      <div className="relative z-10 flex-1 flex items-center justify-center py-12">
-        <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 p-8 rounded-2xl shadow-2xl shadow-slate-950/80 relative">
+      {/* Center Command Card matching Homepage Card Styling */}
+      <div className="flex-1 flex items-center justify-center my-6">
+        <div className="w-full max-w-md bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col justify-between space-y-6">
           
-          {/* Header & Restricted Badge */}
-          <div className="text-center mb-8">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-950/80 text-red-400 border border-red-500/30 mb-3">
-              Restricted Area
-            </span>
-            <h2 className="text-2xl font-black uppercase tracking-wider text-white mb-2">
-              Journalist Access
+          {/* Section Sub-header */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#60a5fa] text-[11px] font-bold uppercase tracking-widest">
+                Zone Access Control
+              </span>
+              <span className="bg-[#020617] text-[#22c55e] text-[11px] px-2.5 py-1 rounded-full border border-[#1e293b] font-medium">
+                ● Live System
+              </span>
+            </div>
+
+            <h2 className="text-3xl font-black uppercase text-white tracking-wide mb-1">
+              Press Gate
             </h2>
-            <p className="text-xs text-slate-400">
-              Authenticate credentials to dispatch news alerts and publish commune field updates.
+            <p className="text-xs text-[#94a3b8]">
+              Authorized journalist login for dispatching real-time sector alerts.
             </p>
           </div>
 
           {/* Error Alert Box */}
           {errorMsg && (
-            <div className="mb-6 p-3 rounded-lg bg-red-950/50 border border-red-500/50 text-red-300 text-xs text-center font-medium">
+            <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs text-center font-bold">
               ⚠️ {errorMsg}
             </div>
           )}
 
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Press Badge / Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
-                placeholder="press@kinshasa-portal.cd"
-              />
+          {/* Form Container Panel */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="bg-[#020617] border border-[#1e293b] rounded-xl p-4 space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#64748b] mb-1.5">
+                  Press Clearance Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="press@kinshasa-portal.cd"
+                  className="w-full bg-[#0f172a] border border-[#1e293b] focus:border-[#2563eb] text-white text-sm rounded-lg px-3.5 py-2.5 outline-none transition-all placeholder:text-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#64748b] mb-1.5">
+                  Security Key
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-[#0f172a] border border-[#1e293b] focus:border-[#2563eb] text-white text-sm rounded-lg px-3.5 py-2.5 outline-none transition-all placeholder:text-slate-600"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Security Clearance Key
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
-                placeholder="••••••••••••"
-              />
-            </div>
-
+            {/* Action Button styled like "Launch Full Hub" */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-lg shadow-lg shadow-red-950/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-[#2563eb] hover:bg-blue-600 active:bg-blue-700 text-white font-bold text-sm uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-lg disabled:opacity-50"
             >
-              {loading ? 'Authenticating System...' : 'Enter Command Center →'}
+              {loading ? 'Authenticating Credentials...' : 'Launch Backoffice Hub →'}
             </button>
           </form>
 
-          {/* Footer Security Badge */}
-          <div className="mt-8 pt-4 border-t border-slate-800/80 text-center">
-            <p className="text-[10px] text-slate-500">
-              🔒 Protected by Supabase Auth & Vercel Security Layer
-            </p>
+          {/* Security Status Box matching Bottom Right Metrics */}
+          <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-[#1e293b]">
+            <div className="bg-[#020617] p-2.5 rounded-lg border border-[#1e293b]">
+              <span className="text-[10px] text-[#64748b] uppercase block">Security Protocol</span>
+              <p className="text-xs font-bold text-[#22c55e] mt-0.5">Encrypted / Active</p>
+            </div>
+            <div className="bg-[#020617] p-2.5 rounded-lg border border-[#1e293b]">
+              <span className="text-[10px] text-[#64748b] uppercase block">Clearance Level</span>
+              <p className="text-xs font-bold text-[#38bdf8] mt-0.5">Level 2 Journalist</p>
+            </div>
           </div>
+
         </div>
       </div>
 
-      {/* Footer Status Line */}
-      <footer className="relative z-10 w-full max-w-6xl mx-auto pt-4 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-600 gap-2">
-        <span>KINSHASA URBAN OPERATIONS PLATFORM v2.4</span>
-        <span className="text-emerald-500 font-mono">SYSTEM ONLINE ● REAL-TIME FEED ACTIVE</span>
+      {/* Footer Line */}
+      <footer className="w-full max-w-[1650px] mx-auto pt-3 border-t border-[#1e293b] flex items-center justify-between text-[11px] text-[#64748b]">
+        <span>KINSHASA URBAN OPERATIONS PLATFORM</span>
+        <span className="text-[#38bdf8] font-mono">SUPABASE AUTH CONNECTED</span>
       </footer>
+
     </main>
   );
 }
