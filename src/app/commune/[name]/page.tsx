@@ -357,7 +357,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
       <footer 
         style={{ 
           display: 'flex', 
-          justify: 'space-between', 
+          justifyContent: 'space-between', 
           alignItems: 'center', 
           paddingTop: '20px', 
           marginTop: '40px',
