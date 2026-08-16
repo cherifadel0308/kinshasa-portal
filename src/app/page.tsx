@@ -4,11 +4,20 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import * as turf from '@turf/turf';
 import { supabase } from '../lib/supabase';
 import communesData from '../data/communes.json';
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL!;
 const DEFAULT_VIDEO = `${STORAGE_URL}/Cinematic_smooth_drone_sweep.mp4`;
+
+// Approximate radius (km) used to draw each commune's 3D zone since we only
+// have a center point per commune, not real boundary polygons. Swap this
+// approach out for real boundary GeoJSON when you have it, for exact shapes.
+const ZONE_RADIUS_KM = 1.1;
+const ZONE_SOURCE_ID = 'commune-zones';
+const ZONE_FILL_LAYER_ID = 'commune-zones-fill';
+const ZONE_LINE_LAYER_ID = 'commune-zones-outline';
 
 type Commune = {
   slug: string;
@@ -24,22 +33,49 @@ type Dispatch = {
   details: string;
   category?: string;
   created_at?: string;
+  commune?: string;
 };
 
 const COMMUNES: Commune[] = communesData.communes;
 const KINSHASA_CENTER: [number, number] = [15.3057, -4.3245];
 
+// Build the static zone geometry once. Per-feature state (selected / live /
+// dispatch count) is applied afterwards via setFeatureState, so we never
+// have to rebuild this GeoJSON on selection or data changes.
+function buildZoneGeoJSON(): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: COMMUNES.map((commune, index) => {
+      const polygon = turf.circle([commune.lng, commune.lat], ZONE_RADIUS_KM, {
+        steps: 48,
+        units: 'kilometers',
+      });
+      return {
+        ...polygon,
+        id: index,
+        properties: {
+          slug: commune.slug,
+          name: commune.name,
+        },
+      };
+    }),
+  };
+}
+
 export default function HomePage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Record<string, maplibregl.Marker>>({});
+  const hoveredIdRef = useRef<number | null>(null);
+  const slugToIdRef = useRef<Record<string, number>>({});
 
   const [selected, setSelected] = useState<Commune>(
     COMMUNES.find((c) => c.slug === 'gombe') ?? COMMUNES[0]
   );
-  const [is3D, setIs3D] = useState(false);
+  const [is3D, setIs3D] = useState(true);
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [hasLiveData, setHasLiveData] = useState(false);
+  const [dispatchCounts, setDispatchCounts] = useState<Record<string, number>>({});
 
   const videoSrc = `${STORAGE_URL}/${selected.slug}.mp4`;
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${selected.lat},${selected.lng}`;
@@ -48,16 +84,99 @@ export default function HomePage() {
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
+    COMMUNES.forEach((commune, index) => {
+      slugToIdRef.current[commune.slug] = index;
+    });
+
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty',
       center: KINSHASA_CENTER,
       zoom: 10.6,
-      pitch: 0,
-      bearing: 0,
+      pitch: 50,
+      bearing: -15,
+      antialias: true,
     });
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
     mapRef.current = map;
+
+    map.on('load', () => {
+      map.addSource(ZONE_SOURCE_ID, {
+        type: 'geojson',
+        data: buildZoneGeoJSON(),
+      });
+
+      map.addLayer({
+        id: ZONE_FILL_LAYER_ID,
+        type: 'fill-extrusion',
+        source: ZONE_SOURCE_ID,
+        paint: {
+          'fill-extrusion-color': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false],
+            '#F59E0B',
+            ['boolean', ['feature-state', 'live'], false],
+            '#10B981',
+            '#94A3B8',
+          ],
+          'fill-extrusion-height': [
+            '+',
+            40,
+            ['*', ['coalesce', ['feature-state', 'dispatchCount'], 0], 45],
+          ],
+          'fill-extrusion-base': 0,
+          'fill-extrusion-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false],
+            0.92,
+            0.62,
+          ],
+        },
+      });
+
+      map.addLayer({
+        id: ZONE_LINE_LAYER_ID,
+        type: 'line',
+        source: ZONE_SOURCE_ID,
+        paint: {
+          'line-color': '#2E7D6B',
+          'line-width': 1,
+          'line-opacity': 0.5,
+        },
+      });
+
+      // Mark the initially-selected commune as selected once the layer exists.
+      const initialId = slugToIdRef.current[selected.slug];
+      if (initialId !== undefined) {
+        map.setFeatureState({ source: ZONE_SOURCE_ID, id: initialId }, { selected: true });
+      }
+
+      map.on('mousemove', ZONE_FILL_LAYER_ID, (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const id = e.features[0].id as number;
+        if (hoveredIdRef.current !== null && hoveredIdRef.current !== id) {
+          map.setFeatureState({ source: ZONE_SOURCE_ID, id: hoveredIdRef.current }, { hover: false });
+        }
+        hoveredIdRef.current = id;
+        map.setFeatureState({ source: ZONE_SOURCE_ID, id }, { hover: true });
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', ZONE_FILL_LAYER_ID, () => {
+        if (hoveredIdRef.current !== null) {
+          map.setFeatureState({ source: ZONE_SOURCE_ID, id: hoveredIdRef.current }, { hover: false });
+          hoveredIdRef.current = null;
+        }
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('click', ZONE_FILL_LAYER_ID, (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const slug = e.features[0].properties?.slug as string | undefined;
+        const commune = COMMUNES.find((c) => c.slug === slug);
+        if (commune) selectCommune(commune);
+      });
+    });
 
     COMMUNES.forEach((commune) => {
       const el = document.createElement('button');
@@ -81,7 +200,7 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch dispatches for the selected commune
+  // Fetch dispatches for the selected commune (unchanged behavior)
   useEffect(() => {
     let cancelled = false;
 
@@ -110,15 +229,85 @@ export default function HomePage() {
     };
   }, [selected]);
 
-  // Fly map to selected commune + update marker styling
+  // Fetch city-wide dispatch counts to drive 3D zone heights + "live" color.
+  // Refreshes periodically so the extruded skyline reflects current activity.
   useEffect(() => {
-    mapRef.current?.flyTo({ center: [selected.lng, selected.lat], zoom: 12.5, duration: 900 });
+    let cancelled = false;
+
+    const fetchCounts = async () => {
+      const { data } = await supabase
+        .from('dispatches')
+        .select('commune')
+        .order('created_at', { ascending: false })
+        .limit(1000);
+
+      if (cancelled || !data) return;
+
+      const counts: Record<string, number> = {};
+      data.forEach((row: { commune?: string }) => {
+        if (!row.commune) return;
+        const match = COMMUNES.find(
+          (c) => c.name.toLowerCase() === row.commune!.toLowerCase()
+        );
+        if (match) counts[match.slug] = (counts[match.slug] ?? 0) + 1;
+      });
+      setDispatchCounts(counts);
+    };
+
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 45000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Push dispatch counts into feature-state so extrusion heights / live color update.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const applyCounts = () => {
+      COMMUNES.forEach((commune) => {
+        const id = slugToIdRef.current[commune.slug];
+        if (id === undefined) return;
+        const count = dispatchCounts[commune.slug] ?? 0;
+        map.setFeatureState(
+          { source: ZONE_SOURCE_ID, id },
+          { dispatchCount: count, live: count > 0 }
+        );
+      });
+    };
+
+    if (map.isStyleLoaded() && map.getSource(ZONE_SOURCE_ID)) {
+      applyCounts();
+    } else {
+      map.once('load', applyCounts);
+    }
+  }, [dispatchCounts]);
+
+  // Fly map to selected commune, update marker styling + feature-state selection
+  useEffect(() => {
+    const map = mapRef.current;
+    map?.flyTo({ center: [selected.lng, selected.lat], zoom: 12.5, duration: 900 });
+
     Object.entries(markersRef.current).forEach(([slug, marker]) => {
       const el = marker.getElement();
       el.className =
         'w-4 h-4 rounded-full border-2 border-white shadow-md cursor-pointer transition-colors duration-150 ' +
         (slug === selected.slug ? 'bg-emerald-600' : 'bg-emerald-400 hover:bg-emerald-500');
     });
+
+    if (map && map.getSource(ZONE_SOURCE_ID)) {
+      COMMUNES.forEach((commune) => {
+        const id = slugToIdRef.current[commune.slug];
+        if (id === undefined) return;
+        map.setFeatureState(
+          { source: ZONE_SOURCE_ID, id },
+          { selected: commune.slug === selected.slug }
+        );
+      });
+    }
   }, [selected]);
 
   const selectCommune = (commune: Commune) => setSelected(commune);
@@ -126,7 +315,7 @@ export default function HomePage() {
   const toggle3D = () => {
     const next = !is3D;
     setIs3D(next);
-    mapRef.current?.easeTo({ pitch: next ? 55 : 0, bearing: next ? -17 : 0, duration: 800 });
+    mapRef.current?.easeTo({ pitch: next ? 50 : 18, bearing: next ? -15 : 0, duration: 800 });
   };
 
   return (
@@ -151,7 +340,7 @@ export default function HomePage() {
         <section className="bg-white border border-[#E5E2D9] rounded-2xl p-4 relative">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs uppercase tracking-wide text-[#5C6B6D] font-medium">
-              Kinshasa — 24 communes
+              Kinshasa — 24 communes, live activity in 3D
             </h2>
             <span className="text-sm font-medium text-[#2E7D6B]">{selected.name}</span>
           </div>
@@ -160,13 +349,27 @@ export default function HomePage() {
             onClick={toggle3D}
             className="absolute top-14 right-8 z-10 bg-white border border-[#E5E2D9] rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-[#F7F6F2]"
           >
-            {is3D ? 'Flatten to 2D' : 'Tilt to 3D'}
+            {is3D ? 'Top view' : '3D view'}
           </button>
 
           <div ref={mapContainer} className="w-full h-[520px] rounded-xl overflow-hidden bg-[#EAF5F1]" />
 
+          <div className="flex items-center gap-4 mt-3 text-[10px] text-[#5C6B6D]">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#F59E0B]" /> Selected
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Live dispatches
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#94A3B8]" /> Quiet zone
+            </span>
+            <span className="ml-auto">Height = dispatch activity</span>
+          </div>
+
           <p className="text-xs text-[#5C6B6D] mt-2">
-            Map data © OpenStreetMap contributors, styled via OpenFreeMap.{' '}
+            Map data © OpenStreetMap contributors, styled via OpenFreeMap. Zones are approximate
+            radius markers, not exact commune boundaries.{' '}
             <a
               href={googleMapsUrl}
               target="_blank"
