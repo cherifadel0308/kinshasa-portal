@@ -15,7 +15,7 @@ interface DispatchItem {
 }
 
 export default function CommuneHubPage({ params }: { params: { name: string } }) {
-  const communeName = decodeURIComponent(params.name);
+  const communeName = decodeURIComponent(params.name).trim();
   const [dispatches, setDispatches] = useState<DispatchItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,22 +23,23 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
     const fetchDispatches = async () => {
       setLoading(true);
       try {
+        // Fetch dispatches using flexible commune matching
         const { data, error } = await supabase
           .from('dispatches')
           .select('*')
-          .ilike('commune', communeName)
+          .ilike('commune', `%${communeName}%`)
           .order('created_at', { ascending: false });
 
         if (data && data.length > 0) {
           const mappedData = data.map((item: any) => ({
             id: item.id,
             commune: item.commune,
-            category: (item.category || item.type || 'live news').toLowerCase(),
+            category: (item.category || item.type || 'live news').toLowerCase().trim(),
             title: item.title || 'Untitled Dispatch',
-            details: item.details || item.description || item.summary || item.content || 'No detailed content provided.',
+            details: item.details || item.content || item.description || item.summary || 'No content provided.',
             created_at: item.created_at || new Date().toISOString(),
-            author: item.source_name || item.source || item.author || item.publisher || item.media_name || 'Media Outlet',
-            url: item.url || item.link || item.article_url || ''
+            author: item.author || item.source_name || item.source || item.publisher || 'Field Journalist',
+            url: item.url || item.link || ''
           }));
           setDispatches(mappedData);
         } else {
@@ -65,14 +66,31 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
     return date.toLocaleDateString();
   };
 
-  // Categorize Dispatches
-  const liveNewsReports = dispatches.filter((d) => 
-    d.category.includes('news') || d.category.includes('live') || d.category.includes('press') || d.url !== ''
+  // Categorize Dispatches with Flexible Keyword Matching
+  const securityReports = dispatches.filter((d) => 
+    d.category.includes('sec') || d.category.includes('police') || d.category.includes('guard')
   );
-  const securityReports = dispatches.filter((d) => d.category.includes('sec'));
-  const economyReports = dispatches.filter((d) => d.category.includes('eco') || d.category.includes('trade'));
-  const socialReports = dispatches.filter((d) => d.category.includes('soc') || d.category.includes('gen'));
-  const cultureReports = dispatches.filter((d) => d.category.includes('cul') || d.category.includes('art'));
+  
+  const economyReports = dispatches.filter((d) => 
+    d.category.includes('eco') || d.category.includes('trade') || d.category.includes('market') || d.category.includes('business')
+  );
+  
+  const socialReports = dispatches.filter((d) => 
+    d.category.includes('soc') || d.category.includes('gen') || d.category.includes('infra') || d.category.includes('health') || d.category.includes('sante')
+  );
+  
+  const cultureReports = dispatches.filter((d) => 
+    d.category.includes('cul') || d.category.includes('art') || d.category.includes('event') || d.category.includes('sport')
+  );
+
+  // Catch-All Live News Feed: Shows items tagged as news OR any dispatch that didn't fit into the 4 specific categories above
+  const liveNewsReports = dispatches.filter((d) => 
+    d.category.includes('news') || 
+    d.category.includes('live') || 
+    d.category.includes('press') || 
+    d.url !== '' ||
+    (!securityReports.includes(d) && !economyReports.includes(d) && !socialReports.includes(d) && !cultureReports.includes(d))
+  );
 
   return (
     <main 
@@ -85,7 +103,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
         boxSizing: 'border-box'
       }}
     >
-      {/* Top Navigation */}
+      {/* Top Header Navigation */}
       <nav 
         style={{
           display: 'flex',
@@ -128,10 +146,10 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
         </div>
       </nav>
 
-      {/* Main Container */}
+      {/* Main Content Container */}
       <div style={{ maxWidth: '1650px', margin: '0 auto' }}>
         
-        {/* Banner Header */}
+        {/* Hub Banner */}
         <div 
           style={{
             backgroundColor: '#0f172a',
@@ -171,28 +189,25 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
           </div>
         </div>
 
-        {/* FEATURED SECTION: LIVE PULLED NEWS FEED */}
+        {/* LIVE NEWS FEED (CATCH-ALL) */}
         <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', marginBottom: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', paddingBottom: '10px', borderBottom: '1px solid #1e293b' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '20px' }}>📰</span>
               <h2 style={{ fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', margin: 0, color: '#ffffff' }}>
-                Live News Feed ({liveNewsReports.length})
+                Live News & Field Dispatches ({liveNewsReports.length})
               </h2>
             </div>
             <span style={{ backgroundColor: '#020617', color: '#38bdf8', fontSize: '10px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '8px', border: '1px solid #1e293b', textTransform: 'uppercase' }}>
-              Real-Time Media Stream
+              Live Stream
             </span>
           </div>
 
           {loading ? (
-            <p style={{ fontSize: '12px', color: '#38bdf8', padding: '12px 0' }}>Loading live news entries from database...</p>
+            <p style={{ fontSize: '12px', color: '#38bdf8', padding: '12px 0' }}>Fetching dispatches...</p>
           ) : liveNewsReports.length === 0 ? (
             <div style={{ backgroundColor: '#020617', border: '1px dashed #334155', borderRadius: '10px', padding: '20px', textAlign: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 6px 0', fontWeight: 'bold' }}>No live news entries recorded for {communeName} yet.</p>
-              <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
-                Run your Supabase Edge Function or post an update from the Journalist Backoffice to populate this feed.
-              </p>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 6px 0', fontWeight: 'bold' }}>No live dispatches recorded for {communeName} yet.</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
@@ -202,7 +217,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span 
                         style={{ 
-                          backgroundColor: '#dc2626', 
+                          backgroundColor: '#2563eb', 
                           color: '#ffffff', 
                           fontSize: '10px', 
                           fontWeight: 'bold', 
@@ -235,7 +250,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
                         paddingTop: '8px'
                       }}
                     >
-                      Read full article on {report.author} →
+                      Read full article →
                     </a>
                   )}
                 </div>
