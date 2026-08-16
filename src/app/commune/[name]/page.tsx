@@ -185,7 +185,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
             padding: '28px',
             marginBottom: '28px',
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
             boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}
@@ -380,7 +380,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
       <footer 
         style={{ 
           display: 'flex', 
-          justify: 'space-between', 
+          justifyContent: 'space-between', 
           alignItems: 'center', 
           paddingTop: '20px', 
           marginTop: '40px',
