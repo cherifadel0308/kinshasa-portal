@@ -18,34 +18,47 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
   const communeName = decodeURIComponent(params.name).trim();
   const [dispatches, setDispatches] = useState<DispatchItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
+  const [rawCount, setRawCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchDispatches = async () => {
       setLoading(true);
+      setDbError(null);
       try {
-        // Fetch dispatches using flexible commune matching
+        // Fetch ALL dispatches first to debug filtering issues
         const { data, error } = await supabase
           .from('dispatches')
-          .select('*')
-          .ilike('commune', `%${communeName}%`)
-          .order('created_at', { ascending: false });
+          .select('*');
 
-        if (data && data.length > 0) {
-          const mappedData = data.map((item: any) => ({
+        if (error) {
+          setDbError(error.message);
+          setDispatches([]);
+        } else if (data) {
+          setRawCount(data.length);
+
+          // Filter in JavaScript to handle any casing or space discrepancies
+          const filtered = data.filter((item: any) => {
+            const itemCommune = String(item.commune || '').toLowerCase().trim();
+            const targetCommune = communeName.toLowerCase().trim();
+            return itemCommune.includes(targetCommune) || targetCommune.includes(itemCommune);
+          });
+
+          const mappedData = filtered.map((item: any) => ({
             id: item.id,
-            commune: item.commune,
+            commune: item.commune || communeName,
             category: (item.category || item.type || 'live news').toLowerCase().trim(),
-            title: item.title || 'Untitled Dispatch',
-            details: item.details || item.content || item.description || item.summary || 'No content provided.',
+            title: item.title || item.headline || 'Untitled Dispatch',
+            details: item.details || item.content || item.description || item.body || 'No details provided.',
             created_at: item.created_at || new Date().toISOString(),
-            author: item.author || item.source_name || item.source || item.publisher || 'Field Journalist',
+            author: item.author || item.source_name || item.source || 'Journalist',
             url: item.url || item.link || ''
           }));
+
           setDispatches(mappedData);
-        } else {
-          setDispatches([]);
         }
-      } catch (err) {
+      } catch (err: any) {
+        setDbError(err.message || 'Failed to connect to database');
         setDispatches([]);
       } finally {
         setLoading(false);
@@ -66,28 +79,14 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
     return date.toLocaleDateString();
   };
 
-  // Categorize Dispatches with Flexible Keyword Matching
-  const securityReports = dispatches.filter((d) => 
-    d.category.includes('sec') || d.category.includes('police') || d.category.includes('guard')
-  );
-  
-  const economyReports = dispatches.filter((d) => 
-    d.category.includes('eco') || d.category.includes('trade') || d.category.includes('market') || d.category.includes('business')
-  );
-  
-  const socialReports = dispatches.filter((d) => 
-    d.category.includes('soc') || d.category.includes('gen') || d.category.includes('infra') || d.category.includes('health') || d.category.includes('sante')
-  );
-  
-  const cultureReports = dispatches.filter((d) => 
-    d.category.includes('cul') || d.category.includes('art') || d.category.includes('event') || d.category.includes('sport')
-  );
+  const securityReports = dispatches.filter((d) => d.category.includes('sec'));
+  const economyReports = dispatches.filter((d) => d.category.includes('eco') || d.category.includes('trade'));
+  const socialReports = dispatches.filter((d) => d.category.includes('soc') || d.category.includes('gen'));
+  const cultureReports = dispatches.filter((d) => d.category.includes('cul') || d.category.includes('art'));
 
-  // Catch-All Live News Feed: Shows items tagged as news OR any dispatch that didn't fit into the 4 specific categories above
   const liveNewsReports = dispatches.filter((d) => 
     d.category.includes('news') || 
     d.category.includes('live') || 
-    d.category.includes('press') || 
     d.url !== '' ||
     (!securityReports.includes(d) && !economyReports.includes(d) && !socialReports.includes(d) && !cultureReports.includes(d))
   );
@@ -103,7 +102,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
         boxSizing: 'border-box'
       }}
     >
-      {/* Top Header Navigation */}
+      {/* Navigation Header */}
       <nav 
         style={{
           display: 'flex',
@@ -112,44 +111,35 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
           paddingBottom: '16px',
           borderBottom: '1px solid #1e293b',
           maxWidth: '1650px',
-          margin: '0 auto 28px auto'
+          margin: '0 auto 20px auto'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div 
-            style={{ 
-              width: '12px', 
-              height: '12px', 
-              borderRadius: '50%', 
-              backgroundColor: '#22c55e', 
-              boxShadow: '0 0 10px #22c55e' 
-            }} 
-          />
+          <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 10px #22c55e' }} />
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, color: '#ffffff' }}>
             Kinshasa Urban Intelligence Portal
           </h1>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <Link 
-            href="/backoffice" 
-            style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}
-          >
+          <Link href="/backoffice" style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}>
             Journalist Backoffice
           </Link>
-          <Link 
-            href="/" 
-            style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}
-          >
+          <Link href="/" style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}>
             ← Portal Map
           </Link>
         </div>
       </nav>
 
-      {/* Main Content Container */}
+      {/* DEBUG PANEL */}
+      <div style={{ maxWidth: '1650px', margin: '0 auto 20px auto', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '10px', padding: '12px 18px', fontSize: '12px', color: '#94a3b8' }}>
+        <strong>Database Status:</strong> {loading ? 'Querying...' : dbError ? <span style={{ color: '#ef4444' }}>Error: {dbError}</span> : <span style={{ color: '#22c55e' }}>Connected ({rawCount} total table rows, {dispatches.length} matching "{communeName}")</span>}
+      </div>
+
+      {/* Main Container */}
       <div style={{ maxWidth: '1650px', margin: '0 auto' }}>
         
-        {/* Hub Banner */}
+        {/* Banner Header */}
         <div 
           style={{
             backgroundColor: '#0f172a',
@@ -189,7 +179,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
           </div>
         </div>
 
-        {/* LIVE NEWS FEED (CATCH-ALL) */}
+        {/* LIVE NEWS FEED */}
         <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', marginBottom: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', paddingBottom: '10px', borderBottom: '1px solid #1e293b' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -215,18 +205,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
                 <div key={report.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span 
-                        style={{ 
-                          backgroundColor: '#2563eb', 
-                          color: '#ffffff', 
-                          fontSize: '10px', 
-                          fontWeight: 'bold', 
-                          padding: '2px 8px', 
-                          borderRadius: '4px', 
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px' 
-                        }}
-                      >
+                      <span style={{ backgroundColor: '#2563eb', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {report.author}
                       </span>
                       <span style={{ fontSize: '11px', color: '#64748b' }}>{formatTimeAgo(report.created_at)}</span>
@@ -235,21 +214,7 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
                     <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>{report.details}</p>
                   </div>
                   {report.url && (
-                    <a 
-                      href={report.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      style={{ 
-                        display: 'inline-block', 
-                        marginTop: '14px', 
-                        fontSize: '11px', 
-                        color: '#38bdf8', 
-                        fontWeight: 'bold', 
-                        textDecoration: 'none',
-                        borderTop: '1px solid #1e293b',
-                        paddingTop: '8px'
-                      }}
-                    >
+                    <a href={report.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '14px', fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
                       Read full article →
                     </a>
                   )}
