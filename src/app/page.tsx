@@ -18,13 +18,14 @@ const VERTICALS = [
 export default function HomePage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
   
   const [activeVertical, setActiveVertical] = useState('all');
-  const [selectedCommune, setSelectedCommune] = useState<string | null>('Gombe'); // null means "All Kinshasa"
+  const [selectedCommune, setSelectedCommune] = useState<string | null>('Gombe'); // null = "Tout Kinshasa"
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
 
-  // Initialize Map
+  // 1. Initialize 3D Map
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
@@ -32,8 +33,9 @@ export default function HomePage() {
       container: mapContainer.current,
       style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
       center: [15.3057, -4.3245],
-      zoom: 11,
-      pitch: 40
+      zoom: 11.5,
+      pitch: 45,
+      bearing: -10
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -53,7 +55,7 @@ export default function HomePage() {
         paint: {
           'fill-extrusion-color': '#1e293b',
           'fill-extrusion-height': ['get', 'height'],
-          'fill-extrusion-opacity': 0.7
+          'fill-extrusion-opacity': 0.65
         }
       });
 
@@ -66,10 +68,10 @@ export default function HomePage() {
     });
   }, []);
 
-  // Fetch Curated Places & Events (Supports all communes or a selected commune)
+  // 2. Fetch Places & Weekend Events from Supabase
   useEffect(() => {
     const fetchData = async () => {
-      // 1. Fetch Places
+      // Fetch Places
       let placeQuery = supabase.from('places').select('*');
       if (selectedCommune) {
         placeQuery = placeQuery.ilike('commune', `%${selectedCommune}%`);
@@ -80,7 +82,7 @@ export default function HomePage() {
       const { data: placeData } = await placeQuery;
       setPlaces(placeData || []);
 
-      // 2. Fetch Weekend Events
+      // Fetch Events
       let eventQuery = supabase.from('events').select('*').order('event_date', { ascending: true });
       if (selectedCommune) {
         eventQuery = eventQuery.ilike('commune', `%${selectedCommune}%`);
@@ -92,10 +94,74 @@ export default function HomePage() {
     fetchData();
   }, [selectedCommune, activeVertical]);
 
+  // 3. Render Interactive Markers on the 3D Map
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Add marker for each place with valid lat & lng
+    places.forEach((place) => {
+      if (!place.lat || !place.lng) return;
+
+      // Create Custom Pin Element
+      const el = document.createElement('div');
+      el.className = 'custom-map-pin';
+      
+      // Pin styling based on category
+      const isFood = place.vertical === 'kin_food';
+      const isCulture = place.vertical === 'kin_culture';
+      const isStyle = place.vertical === 'kin_style';
+      const pinColor = isFood ? '#22c55e' : isCulture ? '#f59e0b' : isStyle ? '#ec4899' : '#38bdf8';
+      const pinIcon = isFood ? '🍔' : isCulture ? '🎨' : isStyle ? '👗' : '📍';
+
+      el.style.backgroundColor = '#020617';
+      el.style.border = `2px solid ${pinColor}`;
+      el.style.borderRadius = '20px';
+      el.style.padding = '4px 10px';
+      el.style.color = '#ffffff';
+      el.style.fontSize = '11px';
+      el.style.fontWeight = 'bold';
+      el.style.cursor = 'pointer';
+      el.style.boxShadow = `0 0 12px ${pinColor}88`;
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.gap = '4px';
+      el.style.whiteSpace = 'nowrap';
+      el.style.transform = 'translate(-50%, -50%)';
+
+      el.innerHTML = `<span>${pinIcon}</span> <span>${place.name}</span>`;
+
+      // Popup Content Card
+      const popupHtml = `
+        <div style="color: #0f172a; font-family: system-ui, sans-serif; padding: 4px;">
+          <span style="font-size: 10px; font-weight: bold; color: #2563eb; text-transform: uppercase;">
+            ★ KINSHASA LABEL — ${place.commune}
+          </span>
+          <h4 style="margin: 4px 0; font-size: 14px; font-weight: 800; color: #020617;">${place.name}</h4>
+          <p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b;">${place.address || ''}</p>
+          <p style="margin: 0; font-size: 12px; color: #334155;">${place.description || ''}</p>
+        </div>
+      `;
+
+      const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(popupHtml);
+
+      // Create and mount MapLibre Marker
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([place.lng, place.lat])
+        .setPopup(popup)
+        .addTo(map.current!);
+
+      markersRef.current.push(marker);
+    });
+  }, [places]);
+
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
       
-      {/* Top Brand Header */}
+      {/* Top Header */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1650px', margin: '0 auto 20px auto', borderBottom: '1px solid #1e293b', paddingBottom: '16px' }}>
         <div>
           <span style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase' }}>Le Média-Guide de Recommandation</span>
@@ -145,7 +211,9 @@ export default function HomePage() {
         {/* MAP SECTION */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Carte Interactive de Curation</span>
+            <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Carte Interactive — {markersRef.current.length} Marqueurs Actifs
+            </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '12px', color: '#22c55e', fontWeight: 'bold' }}>
                 {selectedCommune ? `Commune : ${selectedCommune}` : 'Toutes les Communes'}
@@ -175,7 +243,6 @@ export default function HomePage() {
         {/* CURATED SELECTION DISPLAY */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            {/* View Filter Bar (Show All Kinshasa vs Single Commune) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', margin: 0, textTransform: 'uppercase' }}>
                 {selectedCommune ? selectedCommune : 'Tout Kinshasa'}
