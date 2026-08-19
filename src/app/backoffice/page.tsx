@@ -3,329 +3,193 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 
-const KINSHASA_COMMUNES = [
+const COMMUNES = [
   'Gombe', 'Limete', 'Ngaliema', "N'sele", "N'djili", 'Kintambo', 
   'Barumbu', 'Kinshasa', 'Lingwala', 'Kasa-Vubu', 'Bandalungwa', 
   'Kalamu', 'Ngiri-Ngiri', 'Bumbu', 'Selembao', 'Makala', 'Ngaba', 
   'Lemba', 'Matete', 'Masina', 'Kimbanseke', 'Mont-Ngafula', 'Maluku', 'Ouanza'
 ];
 
-const CATEGORIES = [
-  { id: 'security', label: '🛡️ Security' },
-  { id: 'economy', label: '💼 Economy & Trade' },
-  { id: 'social', label: '👥 Social Services' },
-  { id: 'culture', label: '🎨 Culture & Events' },
-  { id: 'live news', label: '📰 Live News' }
-];
-
 export default function BackofficePage() {
+  const [activeTab, setActiveTab] = useState<'place' | 'event' | 'dispatch'>('place');
   const [commune, setCommune] = useState('Gombe');
-  const [category, setCategory] = useState('security');
-  const [title, setTitle] = useState('');
-  const [details, setDetails] = useState('');
-  const [author, setAuthor] = useState('Field Journalist');
-  const [url, setUrl] = useState('');
-  
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !details.trim()) {
-      setStatusMsg({ type: 'error', text: 'Please fill in both the title and details fields.' });
-      return;
-    }
+  // Place state
+  const [placeName, setPlaceName] = useState('');
+  const [vertical, setVertical] = useState('kin_food');
+  const [address, setAddress] = useState('');
+  const [budget, setBudget] = useState('$$');
+  const [placeDesc, setPlaceDesc] = useState('');
 
+  // Event state
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventCategory, setEventCategory] = useState('Concert');
+  const [eventDesc, setEventDesc] = useState('');
+
+  const handlePublishPlace = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSubmitting(true);
     setStatusMsg(null);
-
     try {
-      const dispatchPayload = {
-        title: title.trim(),
-        details: details.trim(),
-        commune: commune.trim(),
-        category: category.trim(),
-        author: author.trim() || 'Field Journalist',
-        url: url.trim() || null,
-        created_at: new Date().toISOString()
-      };
-
-      const { data, error } = await supabase
-        .from('dispatches')
-        .insert([dispatchPayload])
-        .select();
-
-      if (error) {
-        throw error;
-      }
-
-      setStatusMsg({ 
-        type: 'success', 
-        text: `Dispatch successfully published to ${commune}! View it on the ${commune} Sector Hub.` 
-      });
-
-      // Clear form
-      setTitle('');
-      setDetails('');
-      setUrl('');
+      const { error } = await supabase.from('places').insert([{
+        name: placeName,
+        commune,
+        vertical,
+        address,
+        budget,
+        description: placeDesc,
+        is_label_recommended: true
+      }]);
+      if (error) throw error;
+      setStatusMsg({ type: 'success', text: `Lieu "${placeName}" ajouté à la sélection KINSHASA LABEL !` });
+      setPlaceName(''); setPlaceDesc(''); setAddress('');
     } catch (err: any) {
-      setStatusMsg({ 
-        type: 'error', 
-        text: err.message || 'Failed to submit dispatch. Check your Supabase database connection.' 
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally { setSubmitting(false); }
+  };
+
+  const handlePublishEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setStatusMsg(null);
+    try {
+      const { error } = await supabase.from('events').insert([{
+        title: eventTitle,
+        commune,
+        event_date: eventDate || new Date().toISOString().split('T')[0],
+        category: eventCategory,
+        description: eventDesc,
+        is_weekend_featured: true
+      }]);
+      if (error) throw error;
+      setStatusMsg({ type: 'success', text: `Événement "${eventTitle}" ajouté à KIN WEEKEND !` });
+      setEventTitle(''); setEventDesc('');
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally { setSubmitting(false); }
   };
 
   return (
-    <main 
-      style={{
-        backgroundColor: '#020617',
-        color: '#f8fafc',
-        minHeight: '100vh',
-        padding: '24px',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        boxSizing: 'border-box'
-      }}
-    >
-      {/* Top Bar */}
-      <nav 
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingBottom: '16px',
-          borderBottom: '1px solid #1e293b',
-          maxWidth: '1000px',
-          margin: '0 auto 32px auto'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#38bdf8', boxShadow: '0 0 10px #38bdf8' }} />
-          <h1 style={{ fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, color: '#ffffff' }}>
-            Journalist Command Backoffice
-          </h1>
-        </div>
-
-        <Link 
-          href="/" 
-          style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}
-        >
-          ← Return to Portal Map
-        </Link>
+    <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '24px', fontFamily: 'system-ui, sans-serif' }}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '900px', margin: '0 auto 28px auto', borderBottom: '1px solid #1e293b', paddingBottom: '16px' }}>
+        <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: 0, letterSpacing: '1px' }}>KINSHASA LABEL — Backoffice Curation</h1>
+        <Link href="/" style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px' }}>← Voir le Média</Link>
       </nav>
 
-      {/* Form Container */}
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        
-        {/* Status Alert Banner */}
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         {statusMsg && (
-          <div 
-            style={{
-              padding: '16px 20px',
-              borderRadius: '12px',
-              marginBottom: '24px',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              backgroundColor: statusMsg.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              border: statusMsg.type === 'success' ? '1px solid #22c55e' : '1px solid #ef4444',
-              color: statusMsg.type === 'success' ? '#4ade80' : '#f87171'
-            }}
-          >
-            {statusMsg.type === 'success' ? '✓ ' : '⚠️ '} {statusMsg.text}
+          <div style={{ padding: '14px', borderRadius: '10px', marginBottom: '20px', fontWeight: 'bold', fontSize: '13px', backgroundColor: statusMsg.type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', color: statusMsg.type === 'success' ? '#4ade80' : '#f87171', border: `1px solid ${statusMsg.type === 'success' ? '#22c55e' : '#ef4444'}` }}>
+            {statusMsg.text}
           </div>
         )}
 
-        <form 
-          onSubmit={handleSubmit}
-          style={{
-            backgroundColor: '#0f172a',
-            border: '1px solid #1e293b',
-            borderRadius: '16px',
-            padding: '32px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-          }}
-        >
-          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#ffffff', marginTop: 0, marginBottom: '24px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
-            Publish New Field Dispatch
-          </h2>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Target Commune */}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Target Commune
-              </label>
-              <select 
-                value={commune} 
-                onChange={(e) => setCommune(e.target.value)}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#020617',
-                  color: '#ffffff',
-                  border: '1px solid #334155',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-              >
-                {KINSHASA_COMMUNES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Category */}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Sector Category
-              </label>
-              <select 
-                value={category} 
-                onChange={(e) => setCategory(e.target.value)}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#020617',
-                  color: '#ffffff',
-                  border: '1px solid #334155',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            {/* Author / Source */}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Journalist / Source Name
-              </label>
-              <input 
-                type="text" 
-                value={author} 
-                onChange={(e) => setAuthor(e.target.value)} 
-                placeholder="e.g. Field Reporter, Radio Okapi"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#020617',
-                  color: '#ffffff',
-                  border: '1px solid #334155',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                  outline: 'none'
-                }}
-              />
-            </div>
-
-            {/* External URL (Optional) */}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>
-                External Link URL (Optional)
-              </label>
-              <input 
-                type="url" 
-                value={url} 
-                onChange={(e) => setUrl(e.target.value)} 
-                placeholder="https://..."
-                style={{
-                  width: '100%',
-                  backgroundColor: '#020617',
-                  color: '#ffffff',
-                  border: '1px solid #334155',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Title */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>
-              Dispatch Title *
-            </label>
-            <input 
-              type="text" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              placeholder="e.g. Infrastructure Maintenance along Boulevard du 30 Juin"
-              required
-              style={{
-                width: '100%',
-                backgroundColor: '#020617',
-                color: '#ffffff',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          {/* Content Details */}
-          <div style={{ marginBottom: '28px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>
-              Detailed Report Content *
-            </label>
-            <textarea 
-              value={details} 
-              onChange={(e) => setDetails(e.target.value)} 
-              placeholder="Enter verified field observations, sector status, or media summary..."
-              rows={5}
-              required
-              style={{
-                width: '100%',
-                backgroundColor: '#020617',
-                color: '#ffffff',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                outline: 'none',
-                resize: 'vertical'
-              }}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button 
-            type="submit" 
-            disabled={submitting}
-            style={{
-              width: '100%',
-              backgroundColor: submitting ? '#334155' : '#2563eb',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '14px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            {submitting ? 'Publishing Dispatch to Supabase...' : 'Submit Dispatch to Sector Hub →'}
+        {/* Tab Switcher */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button onClick={() => setActiveTab('place')} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: activeTab === 'place' ? '#2563eb' : '#0f172a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
+            📍 Ajouter un Lieu (100 KIN)
           </button>
-        </form>
+          <button onClick={() => setActiveTab('event')} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: activeTab === 'event' ? '#2563eb' : '#0f172a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
+            🎉 Ajouter KIN WEEKEND
+          </button>
+        </div>
+
+        {/* PLACE FORM */}
+        {activeTab === 'place' && (
+          <form onSubmit={handlePublishPlace} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '28px' }}>
+            <h2 style={{ fontSize: '18px', color: '#38bdf8', marginTop: 0, marginBottom: '20px' }}>Sélection 100 KIN (Lieu Recommandé)</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Commune</label>
+                <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                  {COMMUNES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Verticale</label>
+                <select value={vertical} onChange={(e) => setVertical(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                  <option value="kin_food">🍔 KIN FOOD (Où bien manger)</option>
+                  <option value="kin_places">📍 KIN PLACES (Lieux à découvrir)</option>
+                  <option value="kin_culture">🎨 KIN CULTURE (Culture & Musique)</option>
+                  <option value="kin_style">👗 KIN STYLE (Mode & Créateurs)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Nom du Lieu *</label>
+              <input type="text" value={placeName} onChange={(e) => setPlaceName(e.target.value)} required placeholder="ex: Le Cercle de la Gombe" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Adresse / Repère</label>
+                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="ex: Av. Blvd 30 Juin" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Budget Indicatif</label>
+                <select value={budget} onChange={(e) => setBudget(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                  <option value="$">$ (Abordable)</option>
+                  <option value="$$">$$ (Moyen)</option>
+                  <option value="$$$">$$$ (Premium / High-End)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Pourquoi y aller ? (Description & Recommandation) *</label>
+              <textarea value={placeDesc} onChange={(e) => setPlaceDesc(e.target.value)} required rows={4} placeholder="Ce qui rend cet endroit unique et authentique..." style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+            </div>
+
+            <button type="submit" disabled={submitting} style={{ width: '100%', padding: '14px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+              {submitting ? 'Enregistrement...' : 'Certifier & Publier dans 100 KIN →'}
+            </button>
+          </form>
+        )}
+
+        {/* EVENT FORM */}
+        {activeTab === 'event' && (
+          <form onSubmit={handlePublishEvent} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '28px' }}>
+            <h2 style={{ fontSize: '18px', color: '#a855f7', marginTop: 0, marginBottom: '20px' }}>Rendez-vous KIN WEEKEND</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Commune</label>
+                <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                  {COMMUNES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Date de l'Événement</label>
+                <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Catégorie</label>
+                <select value={eventCategory} onChange={(e) => setEventCategory(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
+                  <option value="Concert">🎶 Concert & Musique</option>
+                  <option value="Gastronomie">🍽️ Gastronomie / Resto</option>
+                  <option value="Exposition">🎨 Exposition / Art</option>
+                  <option value="Loisirs">🌊 Loisirs & Nature</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Titre de l'Événement *</label>
+              <input type="text" value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} required placeholder="ex: Live Jazz & BBQ au Bord du Fleuve" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Détails de l'Événement *</label>
+              <textarea value={eventDesc} onChange={(e) => setEventDesc(e.target.value)} required rows={4} placeholder="Heure, lieu précis, artiste, réservation..." style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+            </div>
+
+            <button type="submit" disabled={submitting} style={{ width: '100%', padding: '14px', backgroundColor: '#a855f7', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+              {submitting ? 'Enregistrement...' : 'Ajouter à la Sélection du Weekend →'}
+            </button>
+          </form>
+        )}
       </div>
     </main>
   );
