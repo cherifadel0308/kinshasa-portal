@@ -20,7 +20,7 @@ export default function HomePage() {
   const map = useRef<maplibregl.Map | null>(null);
   
   const [activeVertical, setActiveVertical] = useState('all');
-  const [selectedCommune, setSelectedCommune] = useState('Gombe');
+  const [selectedCommune, setSelectedCommune] = useState<string | null>('Gombe'); // null means "All Kinshasa"
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
 
@@ -66,19 +66,26 @@ export default function HomePage() {
     });
   }, []);
 
-  // Load Curated Places & Events
+  // Fetch Curated Places & Events (Supports all communes or a selected commune)
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch Places
-      let placeQuery = supabase.from('places').select('*').ilike('commune', `%${selectedCommune}%`);
+      // 1. Fetch Places
+      let placeQuery = supabase.from('places').select('*');
+      if (selectedCommune) {
+        placeQuery = placeQuery.ilike('commune', `%${selectedCommune}%`);
+      }
       if (activeVertical !== 'all' && activeVertical !== 'kin_weekend') {
         placeQuery = placeQuery.eq('vertical', activeVertical);
       }
       const { data: placeData } = await placeQuery;
       setPlaces(placeData || []);
 
-      // Fetch Weekend Events
-      const { data: eventData } = await supabase.from('events').select('*').ilike('commune', `%${selectedCommune}%`).order('event_date', { ascending: true });
+      // 2. Fetch Weekend Events
+      let eventQuery = supabase.from('events').select('*').order('event_date', { ascending: true });
+      if (selectedCommune) {
+        eventQuery = eventQuery.ilike('commune', `%${selectedCommune}%`);
+      }
+      const { data: eventData } = await eventQuery;
       setWeekendEvents(eventData || []);
     };
 
@@ -100,7 +107,7 @@ export default function HomePage() {
         </Link>
       </nav>
 
-      {/* Hero "TU CONNAIS KIN ?" Campaign Bar */}
+      {/* Hero Campaign Bar */}
       <div style={{ maxWidth: '1650px', margin: '0 auto 20px auto', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '14px', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase', marginRight: '10px' }}>SÉLECTION #001</span>
@@ -137,9 +144,30 @@ export default function HomePage() {
         
         {/* MAP SECTION */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Carte Interactive de Curation</span>
-            <span style={{ fontSize: '12px', color: '#22c55e', fontWeight: 'bold' }}>Commune sélectionnée : {selectedCommune}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '12px', color: '#22c55e', fontWeight: 'bold' }}>
+                {selectedCommune ? `Commune : ${selectedCommune}` : 'Toutes les Communes'}
+              </span>
+              {selectedCommune && (
+                <button
+                  onClick={() => setSelectedCommune(null)}
+                  style={{
+                    backgroundColor: '#1e293b',
+                    color: '#38bdf8',
+                    border: '1px solid #334155',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Voir Tout Kinshasa
+                </button>
+              )}
+            </div>
           </div>
           <div ref={mapContainer} style={{ width: '100%', height: '540px', borderRadius: '12px', overflow: 'hidden' }} />
         </section>
@@ -147,26 +175,46 @@ export default function HomePage() {
         {/* CURATED SELECTION DISPLAY */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e293b', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#ffffff', marginTop: 0, marginBottom: '4px', textTransform: 'uppercase' }}>
-              {selectedCommune} — Sélection
-            </h2>
+            {/* View Filter Bar (Show All Kinshasa vs Single Commune) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', margin: 0, textTransform: 'uppercase' }}>
+                {selectedCommune ? selectedCommune : 'Tout Kinshasa'}
+              </h2>
+              
+              <button
+                onClick={() => setSelectedCommune(selectedCommune ? null : 'Gombe')}
+                style={{
+                  backgroundColor: selectedCommune === null ? '#2563eb' : '#020617',
+                  color: '#ffffff',
+                  border: '1px solid #334155',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                {selectedCommune === null ? '📍 Filtrer par Commune' : '🌍 Voir Tous les Lieux'}
+              </button>
+            </div>
+
             <p style={{ fontSize: '12px', color: '#38bdf8', margin: '0 0 20px 0', fontWeight: 'bold' }}>
-              Les Pépites Certifiées par KINSHASA LABEL
+              {selectedCommune ? `Pépites Certifiées à ${selectedCommune}` : 'Toutes les adresses certifiées à Kinshasa'}
             </p>
 
             {/* KIN WEEKEND SECTION */}
             {(activeVertical === 'all' || activeVertical === 'kin_weekend') && (
               <div style={{ marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '12px', color: '#a855f7', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #1e293b', paddingBottom: '6px', marginBottom: '12px' }}>
-                  🎉 KIN WEEKEND à {selectedCommune} ({weekendEvents.length})
+                  🎉 KIN WEEKEND ({weekendEvents.length})
                 </h3>
                 {weekendEvents.length === 0 ? (
-                  <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Aucun événement programmé pour ce weekend.</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Aucun événement programmé actuellement.</p>
                 ) : (
                   weekendEvents.map((evt) => (
                     <div key={evt.id} style={{ backgroundColor: '#020617', border: '1px solid #a855f7', borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase' }}>● {evt.category}</span>
+                        <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase' }}>● {evt.category} ({evt.commune})</span>
                         <span style={{ fontSize: '10px', color: '#94a3b8' }}>{evt.event_date}</span>
                       </div>
                       <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0' }}>{evt.title}</h4>
@@ -184,12 +232,12 @@ export default function HomePage() {
                   📍 Sélection 100 KIN ({places.length})
                 </h3>
                 {places.length === 0 ? (
-                  <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Aucun lieu certifié enregistré pour {selectedCommune}.</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Aucun lieu certifié enregistré dans cette vue.</p>
                 ) : (
                   places.map((place) => (
                     <div key={place.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: 'bold', textTransform: 'uppercase' }}>★ KIN RECOMMENDED</span>
+                        <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: 'bold', textTransform: 'uppercase' }}>★ {place.commune}</span>
                         <span style={{ fontSize: '10px', color: '#eab308', fontWeight: 'bold' }}>{place.budget}</span>
                       </div>
                       <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0' }}>{place.name}</h4>
@@ -202,8 +250,11 @@ export default function HomePage() {
             )}
           </div>
 
-          <Link href={`/commune/${encodeURIComponent(selectedCommune)}`} style={{ display: 'block', textAlign: 'center', backgroundColor: '#2563eb', color: '#ffffff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px', marginTop: '20px' }}>
-            Explorer tout le Guide de {selectedCommune} →
+          <Link 
+            href={selectedCommune ? `/commune/${encodeURIComponent(selectedCommune)}` : `/commune/Gombe`} 
+            style={{ display: 'block', textAlign: 'center', backgroundColor: '#2563eb', color: '#ffffff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px', marginTop: '20px' }}
+          >
+            {selectedCommune ? `Ouvrir le Guide de ${selectedCommune} →` : 'Ouvrir le Guide de Gombe →'}
           </Link>
         </section>
 
