@@ -11,19 +11,20 @@ const COMMUNES = [
 ];
 
 export default function BackofficePage() {
-  const [activeTab, setActiveTab] = useState<'place' | 'event' | 'dispatch'>('place');
+  const [activeTab, setActiveTab] = useState<'place' | 'event'>('place');
   const [commune, setCommune] = useState('Gombe');
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Place state
+  // Place State
   const [placeName, setPlaceName] = useState('');
   const [vertical, setVertical] = useState('kin_food');
   const [address, setAddress] = useState('');
   const [budget, setBudget] = useState('$$');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [placeDesc, setPlaceDesc] = useState('');
 
-  // Event state
+  // Event State
   const [eventTitle, setEventTitle] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventCategory, setEventCategory] = useState('Concert');
@@ -40,12 +41,13 @@ export default function BackofficePage() {
         vertical,
         address,
         budget,
+        google_maps_url: googleMapsUrl || null,
         description: placeDesc,
         is_label_recommended: true
       }]);
       if (error) throw error;
       setStatusMsg({ type: 'success', text: `Lieu "${placeName}" ajouté à la sélection KINSHASA LABEL !` });
-      setPlaceName(''); setPlaceDesc(''); setAddress('');
+      setPlaceName(''); setPlaceDesc(''); setAddress(''); setGoogleMapsUrl('');
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.message });
     } finally { setSubmitting(false); }
@@ -86,7 +88,6 @@ export default function BackofficePage() {
           </div>
         )}
 
-        {/* Tab Switcher */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <button onClick={() => setActiveTab('place')} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: activeTab === 'place' ? '#2563eb' : '#0f172a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
             📍 Ajouter un Lieu (100 KIN)
@@ -96,7 +97,6 @@ export default function BackofficePage() {
           </button>
         </div>
 
-        {/* PLACE FORM */}
         {activeTab === 'place' && (
           <form onSubmit={handlePublishPlace} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '28px' }}>
             <h2 style={{ fontSize: '18px', color: '#38bdf8', marginTop: 0, marginBottom: '20px' }}>Sélection 100 KIN (Lieu Recommandé)</h2>
@@ -123,7 +123,7 @@ export default function BackofficePage() {
               <input type="text" value={placeName} onChange={(e) => setPlaceName(e.target.value)} required placeholder="ex: Le Cercle de la Gombe" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Adresse / Repère</label>
                 <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="ex: Av. Blvd 30 Juin" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
@@ -138,8 +138,13 @@ export default function BackofficePage() {
               </div>
             </div>
 
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Lien Google Maps / Itinéraire (Optional)</label>
+              <input type="url" value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
+            </div>
+
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Pourquoi y aller ? (Description & Recommandation) *</label>
+              <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Pourquoi y aller ? *</label>
               <textarea value={placeDesc} onChange={(e) => setPlaceDesc(e.target.value)} required rows={4} placeholder="Ce qui rend cet endroit unique et authentique..." style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
             </div>
 
@@ -149,7 +154,6 @@ export default function BackofficePage() {
           </form>
         )}
 
-        {/* EVENT FORM */}
         {activeTab === 'event' && (
           <form onSubmit={handlePublishEvent} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '28px' }}>
             <h2 style={{ fontSize: '18px', color: '#a855f7', marginTop: 0, marginBottom: '20px' }}>Rendez-vous KIN WEEKEND</h2>
