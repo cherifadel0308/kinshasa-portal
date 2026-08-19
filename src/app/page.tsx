@@ -21,11 +21,10 @@ export default function HomePage() {
   const markersRef = useRef<maplibregl.Marker[]>([]);
   
   const [activeVertical, setActiveVertical] = useState('all');
-  const [selectedCommune, setSelectedCommune] = useState<string | null>('Gombe'); // null = "Tout Kinshasa"
+  const [selectedCommune, setSelectedCommune] = useState<string | null>('Gombe');
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
 
-  // 1. Initialize 3D Map
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
@@ -68,10 +67,8 @@ export default function HomePage() {
     });
   }, []);
 
-  // 2. Fetch Places & Weekend Events from Supabase
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch Places
       let placeQuery = supabase.from('places').select('*');
       if (selectedCommune) {
         placeQuery = placeQuery.ilike('commune', `%${selectedCommune}%`);
@@ -82,7 +79,6 @@ export default function HomePage() {
       const { data: placeData } = await placeQuery;
       setPlaces(placeData || []);
 
-      // Fetch Events
       let eventQuery = supabase.from('events').select('*').order('event_date', { ascending: true });
       if (selectedCommune) {
         eventQuery = eventQuery.ilike('commune', `%${selectedCommune}%`);
@@ -94,23 +90,16 @@ export default function HomePage() {
     fetchData();
   }, [selectedCommune, activeVertical]);
 
-  // 3. Render Interactive Markers on the 3D Map
   useEffect(() => {
     if (!map.current) return;
 
-    // Remove existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Add marker for each place with valid lat & lng
     places.forEach((place) => {
       if (!place.lat || !place.lng) return;
 
-      // Create Custom Pin Element
       const el = document.createElement('div');
-      el.className = 'custom-map-pin';
-      
-      // Pin styling based on category
       const isFood = place.vertical === 'kin_food';
       const isCulture = place.vertical === 'kin_culture';
       const isStyle = place.vertical === 'kin_style';
@@ -134,7 +123,9 @@ export default function HomePage() {
 
       el.innerHTML = `<span>${pinIcon}</span> <span>${place.name}</span>`;
 
-      // Popup Content Card
+      const mapsLinkHtml = place.google_maps_url ? 
+        `<a href="${place.google_maps_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 6px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Obtenir l'itinéraire Google Maps →</a>` : '';
+
       const popupHtml = `
         <div style="color: #0f172a; font-family: system-ui, sans-serif; padding: 4px;">
           <span style="font-size: 10px; font-weight: bold; color: #2563eb; text-transform: uppercase;">
@@ -143,12 +134,12 @@ export default function HomePage() {
           <h4 style="margin: 4px 0; font-size: 14px; font-weight: 800; color: #020617;">${place.name}</h4>
           <p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b;">${place.address || ''}</p>
           <p style="margin: 0; font-size: 12px; color: #334155;">${place.description || ''}</p>
+          ${mapsLinkHtml}
         </div>
       `;
 
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(popupHtml);
 
-      // Create and mount MapLibre Marker
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat([place.lng, place.lat])
         .setPopup(popup)
@@ -309,7 +300,12 @@ export default function HomePage() {
                       </div>
                       <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0' }}>{place.name}</h4>
                       <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 6px 0' }}>{place.address}</p>
-                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0 }}>{place.description}</p>
+                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 8px 0' }}>{place.description}</p>
+                      {place.google_maps_url && (
+                        <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+                          📍 Obtenir l'itinéraire Google Maps →
+                        </a>
+                      )}
                     </div>
                   ))
                 )}
