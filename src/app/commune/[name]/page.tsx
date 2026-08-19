@@ -24,6 +24,28 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
   const culturePlaces = places.filter(p => p.vertical === 'kin_culture');
   const stylePlaces = places.filter(p => p.vertical === 'kin_style');
 
+  const renderPlaceCard = (p: any) => (
+    <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
+      {p.image_url && (
+        <img 
+          src={p.image_url} 
+          alt={p.name} 
+          style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px', border: '1px solid #1e293b' }} 
+        />
+      )}
+      <strong style={{ color: '#fff', fontSize: '15px', display: 'block', marginBottom: '2px' }}>
+        {p.name} {p.budget ? `(${p.budget})` : ''}
+      </strong>
+      {p.address && <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>{p.address}</span>}
+      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 8px 0', lineHeight: '1.4' }}>{p.description}</p>
+      {p.google_maps_url && (
+        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+          📍 Google Maps Itinéraire →
+        </a>
+      )}
+    </div>
+  );
+
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '24px', fontFamily: 'system-ui, sans-serif' }}>
       
@@ -68,67 +90,25 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
           {/* KIN FOOD */}
           <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', color: '#22c55e', margin: '0 0 16px 0', textTransform: 'uppercase' }}>🍔 KIN FOOD ({foodPlaces.length})</h2>
-            {foodPlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucune adresse enregistrée.</p> : foodPlaces.map(p => (
-              <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
-                <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name} ({p.budget})</strong>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{p.address}</span>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
-                {p.google_maps_url && (
-                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
-                    📍 Google Maps Itinéraire →
-                  </a>
-                )}
-              </div>
-            ))}
+            {foodPlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucune adresse enregistrée.</p> : foodPlaces.map(renderPlaceCard)}
           </section>
 
           {/* KIN PLACES */}
           <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', color: '#38bdf8', margin: '0 0 16px 0', textTransform: 'uppercase' }}>📍 KIN PLACES ({otherPlaces.length})</h2>
-            {otherPlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun lieu enregistré.</p> : otherPlaces.map(p => (
-              <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
-                <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name}</strong>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{p.address}</span>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
-                {p.google_maps_url && (
-                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
-                    📍 Google Maps Itinéraire →
-                  </a>
-                )}
-              </div>
-            ))}
+            {otherPlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun lieu enregistré.</p> : otherPlaces.map(renderPlaceCard)}
           </section>
 
           {/* KIN CULTURE */}
           <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', color: '#f59e0b', margin: '0 0 16px 0', textTransform: 'uppercase' }}>🎨 KIN CULTURE ({culturePlaces.length})</h2>
-            {culturePlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun espace culturel enregistré.</p> : culturePlaces.map(p => (
-              <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
-                <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name}</strong>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
-                {p.google_maps_url && (
-                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
-                    📍 Google Maps Itinéraire →
-                  </a>
-                )}
-              </div>
-            ))}
+            {culturePlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun espace culturel enregistré.</p> : culturePlaces.map(renderPlaceCard)}
           </section>
 
           {/* KIN STYLE */}
           <section style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', color: '#ec4899', margin: '0 0 16px 0', textTransform: 'uppercase' }}>👗 KIN STYLE ({stylePlaces.length})</h2>
-            {stylePlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun créateur/boutique enregistré.</p> : stylePlaces.map(p => (
-              <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
-                <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name}</strong>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
-                {p.google_maps_url && (
-                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
-                    📍 Google Maps Itinéraire →
-                  </a>
-                )}
-              </div>
-            ))}
+            {stylePlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun créateur/boutique enregistré.</p> : stylePlaces.map(renderPlaceCard)}
           </section>
 
         </div>
