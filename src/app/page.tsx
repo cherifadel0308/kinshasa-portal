@@ -123,16 +123,20 @@ export default function HomePage() {
 
       el.innerHTML = `<span>${pinIcon}</span> <span>${place.name}</span>`;
 
+      const imageHtml = place.image_url ? 
+        `<img src="${place.image_url}" alt="${place.name}" style="width: 100%; height: 90px; object-fit: cover; border-radius: 6px; margin: 6px 0;" />` : '';
+
       const mapsLinkHtml = place.google_maps_url ? 
-        `<a href="${place.google_maps_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 6px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Obtenir l'itinéraire Google Maps →</a>` : '';
+        `<a href="${place.google_maps_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 4px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Obtenir l'itinéraire →</a>` : '';
 
       const popupHtml = `
-        <div style="color: #0f172a; font-family: system-ui, sans-serif; padding: 4px;">
+        <div style="color: #0f172a; font-family: system-ui, sans-serif; padding: 4px; max-width: 220px;">
           <span style="font-size: 10px; font-weight: bold; color: #2563eb; text-transform: uppercase;">
             ★ KINSHASA LABEL — ${place.commune}
           </span>
           <h4 style="margin: 4px 0; font-size: 14px; font-weight: 800; color: #020617;">${place.name}</h4>
-          <p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b;">${place.address || ''}</p>
+          ${imageHtml}
+          <p style="margin: 0 0 4px 0; font-size: 11px; color: #64748b;">${place.address || ''}</p>
           <p style="margin: 0; font-size: 12px; color: #334155;">${place.description || ''}</p>
           ${mapsLinkHtml}
         </div>
@@ -293,19 +297,28 @@ export default function HomePage() {
                   <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Aucun lieu certifié enregistré dans cette vue.</p>
                 ) : (
                   places.map((place) => (
-                    <div key={place.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: 'bold', textTransform: 'uppercase' }}>★ {place.commune}</span>
-                        <span style={{ fontSize: '10px', color: '#eab308', fontWeight: 'bold' }}>{place.budget}</span>
-                      </div>
-                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0' }}>{place.name}</h4>
-                      <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 6px 0' }}>{place.address}</p>
-                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 8px 0' }}>{place.description}</p>
-                      {place.google_maps_url && (
-                        <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
-                          📍 Obtenir l'itinéraire Google Maps →
-                        </a>
+                    <div key={place.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px', marginBottom: '12px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      {place.image_url && (
+                        <img 
+                          src={place.image_url} 
+                          alt={place.name} 
+                          style={{ width: '85px', height: '85px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #1e293b', flexShrink: 0 }} 
+                        />
                       )}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: 'bold', textTransform: 'uppercase' }}>★ {place.commune}</span>
+                          <span style={{ fontSize: '10px', color: '#eab308', fontWeight: 'bold' }}>{place.budget}</span>
+                        </div>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0' }}>{place.name}</h4>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 4px 0' }}>{place.address}</p>
+                        <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 6px 0' }}>{place.description}</p>
+                        {place.google_maps_url && (
+                          <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+                            📍 Google Maps Itinéraire →
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
