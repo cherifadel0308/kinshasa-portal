@@ -7,16 +7,13 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
   const communeName = decodeURIComponent(params.name).trim();
   const [places, setPlaces] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       const { data: placeData } = await supabase.from('places').select('*').ilike('commune', `%${communeName}%`);
       const { data: eventData } = await supabase.from('events').select('*').ilike('commune', `%${communeName}%`);
       setPlaces(placeData || []);
       setEvents(eventData || []);
-      setLoading(false);
     };
 
     fetchData();
@@ -75,7 +72,12 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
               <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
                 <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name} ({p.budget})</strong>
                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>{p.address}</span>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 0 0' }}>{p.description}</p>
+                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
+                {p.google_maps_url && (
+                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+                    📍 Google Maps Itinéraire →
+                  </a>
+                )}
               </div>
             ))}
           </section>
@@ -87,7 +89,12 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
               <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
                 <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name}</strong>
                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>{p.address}</span>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 0 0' }}>{p.description}</p>
+                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
+                {p.google_maps_url && (
+                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+                    📍 Google Maps Itinéraire →
+                  </a>
+                )}
               </div>
             ))}
           </section>
@@ -98,7 +105,12 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
             {culturePlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun espace culturel enregistré.</p> : culturePlaces.map(p => (
               <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
                 <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name}</strong>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 0 0' }}>{p.description}</p>
+                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
+                {p.google_maps_url && (
+                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+                    📍 Google Maps Itinéraire →
+                  </a>
+                )}
               </div>
             ))}
           </section>
@@ -109,7 +121,12 @@ export default function CommuneHubPage({ params }: { params: { name: string } })
             {stylePlaces.length === 0 ? <p style={{ fontSize: '12px', color: '#64748b' }}>Aucun créateur/boutique enregistré.</p> : stylePlaces.map(p => (
               <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
                 <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{p.name}</strong>
-                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 0 0' }}>{p.description}</p>
+                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '6px 0 8px 0' }}>{p.description}</p>
+                {p.google_maps_url && (
+                  <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+                    📍 Google Maps Itinéraire →
+                  </a>
+                )}
               </div>
             ))}
           </section>
