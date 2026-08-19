@@ -22,6 +22,7 @@ export default function BackofficePage() {
   // Editable Form Fields
   const [placeName, setPlaceName] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [commune, setCommune] = useState('Gombe');
   const [vertical, setVertical] = useState('kin_food');
   const [address, setAddress] = useState('');
@@ -49,6 +50,7 @@ export default function BackofficePage() {
     setEditingPlaceId(place.id);
     setPlaceName(place.name || '');
     setGoogleMapsUrl(place.google_maps_url || '');
+    setImageUrl(place.image_url || '');
     setCommune(place.commune || 'Gombe');
     setVertical(place.vertical || 'kin_food');
     setAddress(place.address || '');
@@ -67,6 +69,7 @@ export default function BackofficePage() {
     const payload = {
       name: placeName.trim(),
       google_maps_url: googleMapsUrl.trim() || null,
+      image_url: imageUrl.trim() || null,
       commune,
       vertical,
       address,
@@ -77,7 +80,7 @@ export default function BackofficePage() {
 
     try {
       if (editingPlaceId) {
-        // UPDATE existing place name and maps link
+        // UPDATE existing place
         const { error } = await supabase
           .from('places')
           .update(payload)
@@ -109,6 +112,7 @@ export default function BackofficePage() {
     setEditingPlaceId(null);
     setPlaceName('');
     setGoogleMapsUrl('');
+    setImageUrl('');
     setAddress('');
     setPlaceDesc('');
   };
@@ -178,8 +182,17 @@ export default function BackofficePage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {placesList.map((item) => (
-                  <div key={item.id} style={{ backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div key={item.id} style={{ backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    {/* Thumbnail Preview */}
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0, border: '1px solid #334155' }} />
+                    ) : (
+                      <div style={{ width: '80px', height: '80px', backgroundColor: '#0f172a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#64748b', flexShrink: 0, border: '1px dashed #334155' }}>
+                        Pas d'image
+                      </div>
+                    )}
+
+                    <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
                         <span style={{ fontSize: '10px', backgroundColor: '#2563eb', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
                           {item.vertical}
@@ -188,26 +201,22 @@ export default function BackofficePage() {
                         <span style={{ fontSize: '11px', color: '#eab308' }}>{item.budget}</span>
                       </div>
 
-                      {/* Name */}
                       <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px 0', fontWeight: 'bold' }}>
                         {item.name}
                       </h3>
 
-                      {/* Google Maps Link Display */}
-                      {item.google_maps_url ? (
+                      {item.google_maps_url && (
                         <a href={item.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', textDecoration: 'none', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
-                          📍 {item.google_maps_url}
+                          📍 Google Maps Link →
                         </a>
-                      ) : (
-                        <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>⚠️ Pas de lien Google Maps</span>
                       )}
 
-                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0, maxWidth: '600px' }}>{item.description}</p>
+                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0, maxWidth: '500px' }}>{item.description}</p>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button onClick={() => startEditing(item)} style={{ backgroundColor: '#eab308', color: '#000', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
-                        ✏️ Éditer Le Nom / Lien
+                        ✏️ Éditer
                       </button>
                       <button onClick={() => handleDeletePlace(item.id, item.name)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
                         🗑️ Supprimer
@@ -247,6 +256,26 @@ export default function BackofficePage() {
                 placeholder="ex: Restaurent Abou Tarek" 
                 style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} 
               />
+            </div>
+
+            {/* Edit Image URL */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+                Lien de l'Image / Photo (URL)
+              </label>
+              <input 
+                type="url" 
+                value={imageUrl} 
+                onChange={(e) => setImageUrl(e.target.value)} 
+                placeholder="https://images.unsplash.com/... or direct image link" 
+                style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} 
+              />
+              {imageUrl && (
+                <div style={{ marginTop: '10px' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Aperçu :</span>
+                  <img src={imageUrl} alt="Preview" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #334155' }} />
+                </div>
+              )}
             </div>
 
             {/* Edit Google Maps URL */}
