@@ -15,7 +15,7 @@ const VERTICALS = [
   { id: 'kin_weekend', label: '🎉 KIN WEEKEND' }
 ];
 
-// Helper to assign fallback coordinates if lat/lng are missing in database
+// Fallback Geocoding Helper
 const getFallbackCoordinates = (communeName?: string) => {
   const normalized = (communeName || '').toLowerCase();
   if (normalized.includes('limete')) return { lat: -4.350, lng: 15.330 };
@@ -23,8 +23,7 @@ const getFallbackCoordinates = (communeName?: string) => {
   if (normalized.includes('kintambo')) return { lat: -4.318, lng: 15.280 };
   if (normalized.includes('bandal')) return { lat: -4.340, lng: 15.285 };
   if (normalized.includes('kalamu')) return { lat: -4.345, lng: 15.310 };
-  // Default to Gombe / Central Kinshasa
-  return { lat: -4.312, lng: 15.300 };
+  return { lat: -4.312, lng: 15.300 }; // Default Central Kinshasa / Gombe
 };
 
 export default function HomePage() {
@@ -104,11 +103,10 @@ export default function HomePage() {
     fetchData();
   }, [selectedCommune, activeVertical]);
 
-  // Render Markers on Map & Auto-Fit Camera Bounds
+  // Render Markers on Map
   useEffect(() => {
     if (!map.current) return;
 
-    // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
@@ -116,7 +114,6 @@ export default function HomePage() {
     let hasValidCoords = false;
 
     places.forEach((place) => {
-      // Use stored lat/lng or fallback based on commune
       const fallback = getFallbackCoordinates(place.commune);
       const lat = place.lat ? parseFloat(place.lat) : fallback.lat;
       const lng = place.lng ? parseFloat(place.lng) : fallback.lng;
@@ -175,7 +172,6 @@ export default function HomePage() {
       markersRef.current.push(marker);
     });
 
-    // Adjust camera bounds to fit all active markers
     if (hasValidCoords && map.current && places.length > 0) {
       map.current.fitBounds(bounds, { padding: 60, maxZoom: 14 });
     }
@@ -184,7 +180,7 @@ export default function HomePage() {
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '12px', fontFamily: 'system-ui, sans-serif' }}>
       
-      {/* Mobile CSS Styles */}
+      {/* Mobile Styles */}
       <style jsx global>{`
         .nav-header { display: flex; justify-content: space-between; align-items: center; max-width: 1650px; margin: 0 auto 16px auto; border-bottom: 1px solid #1e293b; padding-bottom: 12px; gap: 12px; }
         .hero-banner { max-width: 1650px; margin: 0 auto 16px auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -202,7 +198,7 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* Top Header */}
+      {/* Header */}
       <nav className="nav-header">
         <div>
           <span style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 'bold', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Le Média-Guide de Recommandation</span>
@@ -223,7 +219,7 @@ export default function HomePage() {
         <span style={{ color: '#38bdf8', fontSize: '11px', fontWeight: 'bold' }}>Recommandé ★</span>
       </div>
 
-      {/* Verticals Filter Bar */}
+      {/* Filter Bar */}
       <div style={{ maxWidth: '1650px', margin: '0 auto 16px auto', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
         {VERTICALS.map((v) => (
           <button
@@ -247,10 +243,10 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Responsive Main Grid */}
+      {/* Main Grid */}
       <div className="main-layout-grid">
         
-        {/* MAP SECTION */}
+        {/* MAP */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '14px', border: '1px solid #1e293b', padding: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
             <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>
@@ -273,7 +269,7 @@ export default function HomePage() {
           <div ref={mapContainer} className="map-frame" />
         </section>
 
-        {/* LISTINGS SECTION */}
+        {/* LISTINGS */}
         <section style={{ backgroundColor: '#0f172a', borderRadius: '14px', border: '1px solid #1e293b', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
