@@ -15,13 +15,24 @@ const VERTICALS = [
   { id: 'kin_weekend', label: '🎉 KIN WEEKEND' }
 ];
 
+// Helper to assign fallback coordinates if lat/lng are missing in database
+const getFallbackCoordinates = (communeName?: string) => {
+  const normalized = (communeName || '').toLowerCase();
+  if (normalized.includes('limete')) return { lat: -4.350, lng: 15.330 };
+  if (normalized.includes('ngaliema')) return { lat: -4.335, lng: 15.260 };
+  if (normalized.includes('kintambo')) return { lat: -4.318, lng: 15.280 };
+  if (normalized.includes('bandal')) return { lat: -4.340, lng: 15.285 };
+  if (normalized.includes('kalamu')) return { lat: -4.345, lng: 15.310 };
+  // Default to Gombe / Central Kinshasa
+  return { lat: -4.312, lng: 15.300 };
+};
+
 export default function HomePage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   
   const [activeVertical, setActiveVertical] = useState('all');
-  // FIX 1: Default to null so ALL places load on initial start
   const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
@@ -74,7 +85,7 @@ export default function HomePage() {
       let placeQuery = supabase.from('places').select('*').order('created_at', { ascending: false });
       
       if (selectedCommune) {
-        placeQuery = placeQuery.ilike('commune', `%${selectedCommune}%`);
+        placeQuery = placeQuery.ilike('commune', `%${selectedCommune.trim()}%`);
       }
       if (activeVertical !== 'all' && activeVertical !== 'kin_weekend') {
         placeQuery = placeQuery.eq('vertical', activeVertical);
@@ -84,7 +95,7 @@ export default function HomePage() {
 
       let eventQuery = supabase.from('events').select('*').order('event_date', { ascending: true });
       if (selectedCommune) {
-        eventQuery = eventQuery.ilike('commune', `%${selectedCommune}%`);
+        eventQuery = eventQuery.ilike('commune', `%${selectedCommune.trim()}%`);
       }
       const { data: eventData } = await eventQuery;
       setWeekendEvents(eventData || []);
@@ -105,10 +116,13 @@ export default function HomePage() {
     let hasValidCoords = false;
 
     places.forEach((place) => {
-      if (!place.lat || !place.lng) return;
+      // Use stored lat/lng or fallback based on commune
+      const fallback = getFallbackCoordinates(place.commune);
+      const lat = place.lat ? parseFloat(place.lat) : fallback.lat;
+      const lng = place.lng ? parseFloat(place.lng) : fallback.lng;
 
       hasValidCoords = true;
-      bounds.extend([place.lng, place.lat]);
+      bounds.extend([lng, lat]);
 
       const el = document.createElement('div');
       const isFood = place.vertical === 'kin_food';
@@ -154,15 +168,15 @@ export default function HomePage() {
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(popupHtml);
 
       const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([place.lng, place.lat])
+        .setLngLat([lng, lat])
         .setPopup(popup)
         .addTo(map.current!);
 
       markersRef.current.push(marker);
     });
 
-    // FIX 2: Adjust camera bounds to show all markers automatically
-    if (hasValidCoords && map.current) {
+    // Adjust camera bounds to fit all active markers
+    if (hasValidCoords && map.current && places.length > 0) {
       map.current.fitBounds(bounds, { padding: 60, maxZoom: 14 });
     }
   }, [places]);
