@@ -21,7 +21,8 @@ export default function HomePage() {
   const markersRef = useRef<maplibregl.Marker[]>([]);
   
   const [activeVertical, setActiveVertical] = useState('all');
-  const [selectedCommune, setSelectedCommune] = useState<string | null>('Gombe');
+  // FIX 1: Default to null so ALL places load on initial start
+  const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
   const [places, setPlaces] = useState<any[]>([]);
   const [weekendEvents, setWeekendEvents] = useState<any[]>([]);
 
@@ -67,9 +68,11 @@ export default function HomePage() {
     });
   }, []);
 
+  // Fetch places and events from Supabase
   useEffect(() => {
     const fetchData = async () => {
-      let placeQuery = supabase.from('places').select('*');
+      let placeQuery = supabase.from('places').select('*').order('created_at', { ascending: false });
+      
       if (selectedCommune) {
         placeQuery = placeQuery.ilike('commune', `%${selectedCommune}%`);
       }
@@ -90,14 +93,22 @@ export default function HomePage() {
     fetchData();
   }, [selectedCommune, activeVertical]);
 
+  // Render Markers on Map & Auto-Fit Camera Bounds
   useEffect(() => {
     if (!map.current) return;
 
+    // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
+    const bounds = new maplibregl.LngLatBounds();
+    let hasValidCoords = false;
+
     places.forEach((place) => {
       if (!place.lat || !place.lng) return;
+
+      hasValidCoords = true;
+      bounds.extend([place.lng, place.lat]);
 
       const el = document.createElement('div');
       const isFood = place.vertical === 'kin_food';
@@ -126,7 +137,7 @@ export default function HomePage() {
         `<img src="${place.image_url}" alt="${place.name}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin: 6px 0;" />` : '';
 
       const mapsLinkHtml = place.google_maps_url ? 
-        `<a href="${place.google_maps_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 4px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Itinéraire →</a>` : '';
+        `<a href="${place.google_maps_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 4px; font-size: 11px; font-weight: bold; color: #2563eb; text-decoration: none;">📍 Google Maps Itinéraire →</a>` : '';
 
       const popupHtml = `
         <div style="color: #0f172a; font-family: system-ui, sans-serif; padding: 2px; max-width: 200px;">
@@ -149,12 +160,17 @@ export default function HomePage() {
 
       markersRef.current.push(marker);
     });
+
+    // FIX 2: Adjust camera bounds to show all markers automatically
+    if (hasValidCoords && map.current) {
+      map.current.fitBounds(bounds, { padding: 60, maxZoom: 14 });
+    }
   }, [places]);
 
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '12px', fontFamily: 'system-ui, sans-serif' }}>
       
-      {/* Dynamic Mobile CSS Styles */}
+      {/* Mobile CSS Styles */}
       <style jsx global>{`
         .nav-header { display: flex; justify-content: space-between; align-items: center; max-width: 1650px; margin: 0 auto 16px auto; border-bottom: 1px solid #1e293b; padding-bottom: 12px; gap: 12px; }
         .hero-banner { max-width: 1650px; margin: 0 auto 16px auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -193,7 +209,7 @@ export default function HomePage() {
         <span style={{ color: '#38bdf8', fontSize: '11px', fontWeight: 'bold' }}>Recommandé ★</span>
       </div>
 
-      {/* Verticals Filter Bar (Scrollable on Mobile) */}
+      {/* Verticals Filter Bar */}
       <div style={{ maxWidth: '1650px', margin: '0 auto 16px auto', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
         {VERTICALS.map((v) => (
           <button
@@ -224,18 +240,18 @@ export default function HomePage() {
         <section style={{ backgroundColor: '#0f172a', borderRadius: '14px', border: '1px solid #1e293b', padding: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
             <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>
-              Carte ({markersRef.current.length} Lieux)
+              Carte ({markersRef.current.length} Marqueurs Visible)
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: 'bold' }}>
-                {selectedCommune ? selectedCommune : 'Tout Kinshasa'}
+                {selectedCommune ? `Commune: ${selectedCommune}` : 'Tout Kinshasa'}
               </span>
               {selectedCommune && (
                 <button
                   onClick={() => setSelectedCommune(null)}
                   style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}
                 >
-                  Tout Kinshasa
+                  Afficher Tout Kinshasa
                 </button>
               )}
             </div>
@@ -254,7 +270,7 @@ export default function HomePage() {
                 onClick={() => setSelectedCommune(selectedCommune ? null : 'Gombe')}
                 style={{ backgroundColor: selectedCommune === null ? '#2563eb' : '#020617', color: '#ffffff', border: '1px solid #334155', padding: '5px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}
               >
-                {selectedCommune === null ? '📍 Filtrer Commune' : '🌍 Voir Tout'}
+                {selectedCommune === null ? '📍 Filtrer Gombe' : '🌍 Voir Tout Kinshasa'}
               </button>
             </div>
 
