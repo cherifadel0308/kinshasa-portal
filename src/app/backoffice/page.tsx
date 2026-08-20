@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 
@@ -27,7 +27,12 @@ export default function BackofficePage() {
   const [vertical, setVertical] = useState('kin_food');
   const [address, setAddress] = useState('');
   const [budget, setBudget] = useState('$$');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [placeDesc, setPlaceDesc] = useState('');
+
+  const placeInputRef = useRef<HTMLInputElement | null>(null);
+  const autocompleteRef = useRef<any>(null);
 
   // Fetch all listed places from Supabase
   const fetchPlaces = async () => {
@@ -45,6 +50,51 @@ export default function BackofficePage() {
     fetchPlaces();
   }, []);
 
+  // Load Google Places Autocomplete Script
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!apiKey) return;
+
+    if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
+      initAutocomplete();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.onload = () => initAutocomplete();
+    document.head.appendChild(script);
+  }, [activeTab]);
+
+  const initAutocomplete = () => {
+    if (!placeInputRef.current || !(window as any).google) return;
+
+    autocompleteRef.current = new (window as any).google.maps.places.Autocomplete(placeInputRef.current, {
+      types: ['establishment', 'geocode'],
+      componentRestrictions: { country: 'cd' } // Restrict search to DR Congo
+    });
+
+    autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current?.getPlace();
+      if (!place) return;
+
+      if (place.name) setPlaceName(place.name);
+      if (place.formatted_address) setAddress(place.formatted_address);
+      if (place.url) setGoogleMapsUrl(place.url);
+
+      if (place.geometry && place.geometry.location) {
+        setLat(place.geometry.location.lat());
+        setLng(place.geometry.location.lng());
+      }
+
+      if (place.photos && place.photos.length > 0) {
+        const photoUrl = place.photos[0].getUrl({ maxWidth: 800 });
+        setImageUrl(photoUrl);
+      }
+    });
+  };
+
   // Populate form to edit a place
   const startEditing = (place: any) => {
     setEditingPlaceId(place.id);
@@ -55,6 +105,8 @@ export default function BackofficePage() {
     setVertical(place.vertical || 'kin_food');
     setAddress(place.address || '');
     setBudget(place.budget || '$$');
+    setLat(place.lat || null);
+    setLng(place.lng || null);
     setPlaceDesc(place.description || '');
     setActiveTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -74,6 +126,8 @@ export default function BackofficePage() {
       vertical,
       address,
       budget,
+      lat,
+      lng,
       description: placeDesc,
       is_label_recommended: true
     };
@@ -114,6 +168,8 @@ export default function BackofficePage() {
     setGoogleMapsUrl('');
     setImageUrl('');
     setAddress('');
+    setLat(null);
+    setLng(null);
     setPlaceDesc('');
   };
 
@@ -132,13 +188,18 @@ export default function BackofficePage() {
   };
 
   return (
-    <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '24px', fontFamily: 'system-ui, sans-serif' }}>
+    <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
       
       {/* Navigation Header */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1000px', margin: '0 auto 28px auto', borderBottom: '1px solid #1e293b', paddingBottom: '16px' }}>
-        <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: 0, letterSpacing: '1px' }}>
-          KINSHASA LABEL — Gestion des Lieux
-        </h1>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1000px', margin: '0 auto 28px auto', borderBottom: '1px solid #1e293b', paddingBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Link href="/" style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '8px 14px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🏠 Accueil
+          </Link>
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: 0, letterSpacing: '1px' }}>
+            KINSHASA LABEL — Backoffice
+          </h1>
+        </div>
         <Link href="/" style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px' }}>
           ← Voir le Média
         </Link>
@@ -166,13 +227,13 @@ export default function BackofficePage() {
             onClick={() => { setActiveTab('add'); resetForm(); }} 
             style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: activeTab === 'add' ? '#2563eb' : '#0f172a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
           >
-            {editingPlaceId ? '✏️ Modifier le Lieu' : '➕ Ajouter un Nouveau Lieu'}
+            {editingPlaceId ? '✏️ Modifier le Lieu' : '➕ Ajouter un Lieu via Google Maps'}
           </button>
         </div>
 
         {/* LIST & EDIT TAB */}
         {activeTab === 'manage' && (
-          <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '28px' }}>
+          <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', color: '#38bdf8', marginTop: 0, marginBottom: '20px' }}>
               Lieux Répertoriés à Kinshasa
             </h2>
@@ -182,7 +243,7 @@ export default function BackofficePage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {placesList.map((item) => (
-                  <div key={item.id} style={{ backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <div key={item.id} style={{ backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {/* Thumbnail Preview */}
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0, border: '1px solid #334155' }} />
@@ -192,13 +253,16 @@ export default function BackofficePage() {
                       </div>
                     )}
 
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ flex: '1 1 280px' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '10px', backgroundColor: '#2563eb', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
                           {item.vertical}
                         </span>
                         <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: 'bold' }}>{item.commune}</span>
                         <span style={{ fontSize: '11px', color: '#eab308' }}>{item.budget}</span>
+                        {item.lat && item.lng && (
+                          <span style={{ fontSize: '10px', color: '#38bdf8' }}>📍 Coordonnées OK</span>
+                        )}
                       </div>
 
                       <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px 0', fontWeight: 'bold' }}>
@@ -211,7 +275,7 @@ export default function BackofficePage() {
                         </a>
                       )}
 
-                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0, maxWidth: '500px' }}>{item.description}</p>
+                      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0 }}>{item.description}</p>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -231,10 +295,10 @@ export default function BackofficePage() {
 
         {/* ADD / EDIT FORM */}
         {activeTab === 'add' && (
-          <form onSubmit={handleSavePlace} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '28px' }}>
+          <form onSubmit={handleSavePlace} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
               <h2 style={{ fontSize: '18px', color: '#38bdf8', margin: 0 }}>
-                {editingPlaceId ? `Éditer : "${placeName}"` : 'Nouveau Lieu'}
+                {editingPlaceId ? `Éditer : "${placeName}"` : 'Rechercher & Importer via Google Maps'}
               </h2>
               {editingPlaceId && (
                 <button type="button" onClick={() => { resetForm(); setActiveTab('manage'); }} style={{ backgroundColor: '#475569', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
@@ -243,25 +307,29 @@ export default function BackofficePage() {
               )}
             </div>
 
-            {/* Edit Name */}
+            {/* Google Places Search Input */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                Nom du Lieu *
+                🔍 Nom du Lieu (Recherche Auto Google Maps) *
               </label>
               <input 
+                ref={placeInputRef}
                 type="text" 
                 value={placeName} 
                 onChange={(e) => setPlaceName(e.target.value)} 
                 required 
-                placeholder="ex: Restaurent Abou Tarek" 
-                style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} 
+                placeholder="ex: Restaurent Abou Tarek, Mamma Mia Kinshasa..." 
+                style={{ width: '100%', padding: '12px', backgroundColor: '#020617', border: '1px solid #2563eb', color: '#fff', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} 
               />
+              <span style={{ fontSize: '10px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                💡 Tapez un nom : les coordonnées, l'adresse, la photo et le lien Google Maps seront remplis automatiquement lors du clic sur le résultat.
+              </span>
             </div>
 
             {/* Edit Image URL */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                Lien de l'Image / Photo (URL)
+                Lien Photo (URL)
               </label>
               <input 
                 type="url" 
@@ -272,7 +340,7 @@ export default function BackofficePage() {
               />
               {imageUrl && (
                 <div style={{ marginTop: '10px' }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Aperçu :</span>
+                  <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Aperçu Photo :</span>
                   <img src={imageUrl} alt="Preview" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #334155' }} />
                 </div>
               )}
@@ -292,7 +360,7 @@ export default function BackofficePage() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Commune</label>
                 <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px' }}>
@@ -310,7 +378,7 @@ export default function BackofficePage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Adresse / Repère</label>
                 <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="ex: Av. Blvd 30 Juin" style={{ width: '100%', padding: '10px', backgroundColor: '#020617', border: '1px solid #334155', color: '#fff', borderRadius: '8px', boxSizing: 'border-box' }} />
