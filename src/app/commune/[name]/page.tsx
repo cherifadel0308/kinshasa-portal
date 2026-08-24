@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -97,7 +98,7 @@ const COMMUNE_DETAILS: Record<string, {
     zoom: 14.0
   },
   Kintambo: {
-    tagline: 'Carrefour historique et carrefour commercial stratégique.',
+    tagline: 'Carrefour historique et pôle commercial stratégique.',
     specification: 'Une des plus anciennes communes de la ville, située à la jonction entre Gombe, Ngaliema et le fleuve, réputée pour son pôle commercial de Kintambo Magasin.',
     history: 'Lieu de contact initial entre les populations autochtones Teke/Humbu et les expéditions européennes à la fin du XIXe siècle.',
     economy: 'Commerce de transit, grands marchés de vêtements, centres de transport en commun et petits métiers d\'artisanat.',
@@ -229,7 +230,7 @@ const COMMUNE_DETAILS: Record<string, {
   Ngaliema: {
     tagline: 'Le sommet diplomatique et résidentiel surplombant le Fleuve Congo.',
     specification: 'Surplombant le fleuve Congo depuis ses collines verdoyantes, Ngaliema abrite le Palais de la Nation, la Cité de l\'Union Africaine ainsi que les résidences huppées de Binza.',
-    history: 'C\'est ici qu\'Henry Morton Stanley établit son campement en 1881 face au chef Ngaliema. Le Mont Ngaliema conserve les vestiges du passé colonial et présidentiel (Parc de la N\'Sele, Musée National).',
+    history: 'C\'est ici qu\'Henry Morton Stanley établit son campement en 1881 face au chef Ngaliema. Le Mont Ngaliema conserve les vestiges du passé colonial et présidentiel.',
     economy: 'Immobilier de très haut standing (Binza Macampagne, Pigeon, IPN), tourisme historique, institutions gouvernementales et complexes hôteliers panoramiques.',
     keyDistricts: ['Binza Macampagne', 'Binza Pigeon', 'Binza Ozone', 'Mont Ngaliema', 'Kintambo Magasin'],
     lat: -4.335,
@@ -260,87 +261,6 @@ const COMMUNE_DETAILS: Record<string, {
 
 const ALL_KINSHASA_COMMUNES = Object.keys(COMMUNE_DETAILS).sort();
 
-    tagline: 'Le centre névralgique des affaires, du pouvoir et de la haute gastronomie.',
-    specification: 'Gombe (anciennement Kalina) est le Centre d\'Affaires Central (CBD) de Kinshasa. Elle abrite les ministères, ambassades, sièges de banques internationales, hôtels 5 étoiles et restaurants gastronomiques.',
-    history: 'Fondée à l\'époque coloniale autour de la baie de Ngaliema et du fleuve Congo, la commune tire son nom de la rivière Gombe. Elle a longtemps été le quartier européen exclusif avant d\'évoluer en cœur administratif et financier du pays.',
-    economy: 'Secteur tertiaire dominant : services financiers, diplomatie, sièges d\'entreprises multinationales, hôtellerie de luxe et restauration haut de gamme. C\'est la zone à plus forte valeur foncière de RDC.',
-    keyDistricts: ['Blvd du 30 Juin', 'Golf', 'Gare Centrale', 'Socimat', 'Fleuve Congo Hotel'],
-    lat: -4.305,
-    lng: 15.302,
-    zoom: 13.5
-  },
-  Limete: {
-    tagline: 'Entre pôle industriel, galeries d\'art et résidences de prestige.',
-    specification: 'Séparée par le Boulevard Lumumba en zones Industrielle et Résidentielle, Limete est réputée pour sa verdure, ses brasseries, ses galeries d\'art contemporain et la célèbre Tour de l\'Échangeur.',
-    history: 'Aménagée dans les années 1950 pour concentrer l\'activité industrielle de la capitale, Limete est devenue le symbole de la modernité industrielle congolaise avec ses larges avenues arborées.',
-    economy: 'Lourde présence industrielle (Brasseries Bralima/Haggar, transformation agro-alimentaire, usines textiles), ateliers d\'art, concessions automobiles et secteur résidentiel aisé.',
-    keyDistricts: ['Limete Résidentiel', 'Zone Industrielle', 'Échangeur', 'Météo'],
-    lat: -4.350,
-    lng: 15.330,
-    zoom: 13.0
-  },
-  Ngaliema: {
-    tagline: 'Le sommet diplomatique et résidentiel surplombant le Fleuve Congo.',
-    specification: 'Surplombant le fleuve Congo depuis ses collines verdoyantes, Ngaliema abrite le Palais de la Nation, la Cité de l\'Union Africaine ainsi que les résidences huppées de Binza.',
-    history: 'C\'est ici qu\'Henry Morton Stanley établit son campement en 1881 face au chef Ngaliema. Le Mont Ngaliema conserve les vestiges du passé colonial et présidentiel (Parc de la N\'Sele, Musée National).',
-    economy: 'Immobilier de très haut standing (Binza Macampagne, Pigeon, IPN), tourisme historique, institutions gouvernementales et complexes hôteliers panoramiques.',
-    keyDistricts: ['Binza Macampagne', 'Binza Pigeon', 'Binza Ozone', 'Mont Ngaliema', 'Kintambo Magasin'],
-    lat: -4.335,
-    lng: 15.260,
-    zoom: 12.8
-  },
-  Bandalungwa: {
-    tagline: 'Le temple de la sapologie, de la musique et de la vie nocturne kinois.',
-    specification: 'Surnommée "Bandal c\'est Paris", cette commune festive est le cœur battant de la jeunesse, des maquis traditionnels, du couper-décaler et des tendances culinaires urbaines.',
-    history: 'Conçue dans les années 1950 comme une cité ouvrière modèle avec un plan en damier rigoureux, Bandal a progressivement été investie par les artistes et musiciens de la Rumba Congolaise.',
-    economy: 'Économie créative et de divertissement : centaines de bars/maquis, terrasses lounge, salons de coiffure de luxe, boutiques de mode et restauration rapide locale.',
-    keyDistricts: ['Bandal Synfact', 'Makelele', 'Bandal Moulaert', 'Tshibangu'],
-    lat: -4.340,
-    lng: 15.285,
-    zoom: 14.0
-  },
-  Kalamu: {
-    tagline: 'Berceau mythique de la Rumba Congolaise et carrefour culturel.',
-    specification: 'Inscrite au patrimoine culturel avec le mythique quartier Matonge et la Place Victoire, Kalamu est la capitale de l\'expression musicale et populaire de Kinshasa.',
-    history: 'Nommée en hommage à la rivière Kalamu, elle s\'est développée dès 1940. Matonge y est devenu mondialement connu comme le sanctuaire des orchestres de rumba et des stars de la musique.',
-    economy: 'Commerce de proximité, bars musicaux historiques, studios d\'enregistrement, marchés de tissus et confection de mode urbaine.',
-    keyDistricts: ['Matonge', 'Place Victoire', 'Yolo Nord', 'Yolo Sud', 'Stade Tata Raphaël'],
-    lat: -4.345,
-    lng: 15.310,
-    zoom: 13.8
-  },
-  Kintambo: {
-    tagline: 'Carrefour historique et carrefour commercial stratégique.',
-    specification: 'Une des plus anciennes communes de la ville, située à la jonction entre Gombe, Ngaliema et le fleuve, réputée pour son pôle commercial de Kintambo Magasin.',
-    history: 'Lieu de contact initial entre les populations autochtones Teke/Humbu et les expéditions européennes à la fin du XIXe siècle.',
-    economy: 'Commerce de transit, grands marchés de vêtements, centres de transport en commun et petits métiers d\'artisanat.',
-    keyDistricts: ['Kintambo Magasin', 'Velodrome', 'Jamaique'],
-    lat: -4.318,
-    lng: 15.280,
-    zoom: 14.0
-  },
-  Lemba: {
-    tagline: 'La cité universitaire intellectuelle et estudiantine.',
-    specification: 'Commune académique abritant l\'Université de Kinshasa (UNIKIN) et le Commissariat Général à l\'Énergie Atomique (CGEA).',
-    history: 'Planifiée dans les années 1960 pour accueillir l\'élite universitaire et le personnel enseignant de la première université du pays.',
-    economy: 'Économie du savoir, logements étudiants, papeteries, bars estudiantins, centres de recherche et commerces de restauration populaire.',
-    keyDistricts: ['UNIKIN', 'Lemba Super', 'Righini', 'Echangeur'],
-    lat: -4.410,
-    lng: 15.315,
-    zoom: 13.2
-  },
-  "N'sele": {
-    tagline: 'L\'oasis champêtre, éco-touristique et fluviale de Kinshasa.',
-    specification: 'Immense commune peri-urbaine située à l\'Est, réputée pour le Parc de la N\'Sele, ses domaines aquatiques et ses résidences secondaires au bord de l\'eau.',
-    history: 'Créée sous la 2ème République pour abriter la cité agro-industrielle présidentielle et le Domaine de la N\'Sele.',
-    economy: 'Tourisme vert, hébergement de weekend, complexes hôteliers au bord du fleuve Congo, agriculture maraîchère et pisciculture.',
-    keyDistricts: ['Kinkole', 'Domaine de la N\'Sele', 'Mikonga'],
-    lat: -4.380,
-    lng: 15.550,
-    zoom: 11.5
-  }
-};
-
 const DEFAULT_COMMUNE_BRIEF = {
   tagline: 'Une commune vivante et authentique du grand Kinshasa.',
   specification: 'Commune intégrante du tissu urbain de Kinshasa, caractérisée par une vie communautaire dynamique, des marchés locaux animés et une population accueillante.',
@@ -365,11 +285,9 @@ export default function CommuneDetailPage() {
 
   const [places, setPlaces] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       const { data: placeData } = await supabase
         .from('places')
         .select('*')
@@ -384,7 +302,6 @@ export default function CommuneDetailPage() {
 
       setPlaces(placeData || []);
       setEvents(eventData || []);
-      setLoading(false);
     };
 
     fetchData();
@@ -411,7 +328,7 @@ export default function CommuneDetailPage() {
       map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
     }
 
-    // Add markers for places
+    // Add map markers for verified places
     places.forEach((p) => {
       const lat = p.lat ? parseFloat(p.lat) : communeInfo.lat;
       const lng = p.lng ? parseFloat(p.lng) : communeInfo.lng;
@@ -446,6 +363,28 @@ export default function CommuneDetailPage() {
   const otherPlaces = places.filter(p => p.vertical === 'kin_places');
   const culturePlaces = places.filter(p => p.vertical === 'kin_culture');
   const stylePlaces = places.filter(p => p.vertical === 'kin_style');
+
+  const renderPlaceCard = (p: any) => (
+    <div key={p.id} style={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
+      {p.image_url && (
+        <img 
+          src={p.image_url} 
+          alt={p.name} 
+          style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px', border: '1px solid #1e293b' }} 
+        />
+      )}
+      <strong style={{ color: '#fff', fontSize: '14px', display: 'block', marginBottom: '2px' }}>
+        {p.name} {p.budget ? `(${p.budget})` : ''}
+      </strong>
+      {p.address && <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>{p.address}</span>}
+      <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 6px 0', lineHeight: '1.4' }}>{p.description}</p>
+      {p.google_maps_url && (
+        <a href={p.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold', textDecoration: 'none' }}>
+          📍 Google Maps Itinéraire →
+        </a>
+      )}
+    </div>
+  );
 
   return (
     <main style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
